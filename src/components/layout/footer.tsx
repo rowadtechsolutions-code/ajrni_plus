@@ -33,18 +33,18 @@ export function Footer() {
     <footer className="bg-primary text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-0">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <div className="space-y-5">
+           <div className="space-y-5">
             <Link href="/" className="inline-flex items-center gap-3 group">
-              <img src="/images/logo.png" alt="Ajrni" className="w-10 h-10 object-contain" />
-              <div>
-                <span className="text-xl font-bold tracking-tight">أجرني</span>
-                <span className="text-sm text-white/40 font-medium mr-1.5">| Ajrni</span>
-              </div>
+              <img
+                src="/images/logo_fotar.png"
+                alt="أجرني بلس"
+                className="h-14 w-auto max-w-[280px] sm:max-w-[350px] md:max-w-[400px] object-contain"
+              />
             </Link>
             <p className="text-sm text-white/50 leading-relaxed">
               {locale === "ar"
-                ? "أجرني منصة ذكية تربط العملاء بمكاتب تأجير السيارات في الخليج، لتجربة حجز سهلة وسريعة وموثوقة."
-                : "Ajrni is a smart platform connecting customers with car rental offices in the Gulf, for an easy, fast, and reliable booking experience."}
+                ? "أجرني بلس منصة ذكية تربط العملاء بمكاتب تأجير السيارات في الخليج، لتجربة حجز سهلة وسريعة وموثوقة."
+                : "Ajrni Plus is a smart platform connecting customers with car rental offices in the Gulf, for an easy, fast, and reliable booking experience."}
             </p>
             <div className="flex items-center gap-2.5">
               {socialLinks.map((social) => (
@@ -121,7 +121,7 @@ export function Footer() {
 
         <div className="border-t border-white/5 mt-12 pt-8 pb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-white/30">
-            © {new Date().getFullYear()} Ajrni | أجرني. {locale === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
+            © {new Date().getFullYear()} Ajrni Plus | أجرني بلس. {locale === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
           </p>
           <div className="flex items-center gap-4">
             <Link href="/" className="text-xs text-white/30 hover:text-white/60 transition-all">

@@ -38,11 +38,11 @@ export function Header() {
           <div className="flex items-center justify-between lg:grid lg:grid-cols-3 h-16 lg:h-20">
             {/* START - Logo */}
             <Link href="/" className="flex items-center gap-2.5 shrink-0">
-              <img src="/images/logo.png" alt="Ajrni" className="w-8 h-8 object-contain" />
-              <div className="flex items-baseline gap-1">
-                <span className="text-lg font-bold text-primary tracking-tight">أجرني</span>
-                <span className="hidden sm:inline text-xs text-muted-foreground/70 font-medium">| Ajrni</span>
-              </div>
+              <img
+                src="/images/logo.png"
+                alt="أجرني بلس"
+                className="h-12 w-auto max-w-[250px] sm:max-w-[280px] md:max-w-[320px] object-contain"
+              />
             </Link>
 
             {/* CENTER - Nav links */}
@@ -154,8 +154,11 @@ export function Header() {
             >
               <div className="flex items-center justify-between p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
-                  <img src="/images/logo.png" alt="Ajrni" className="w-7 h-7 object-contain" />
-                  <span className="text-lg font-bold text-primary">أجرني</span>
+                  <img
+                    src="/images/logo.png"
+                    alt="أجرني بلس"
+                    className="h-10 w-auto max-w-[180px] object-contain"
+                  />
                 </div>
                 <button onClick={() => setMobileMenu(false)} className="p-2 rounded-xl hover:bg-gray-100 transition-all">
                   <X className="w-5 h-5" />

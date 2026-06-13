@@ -3,17 +3,16 @@
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, Calendar, Car, TrendingUp, Star, Shield, Zap, ChevronLeft, ArrowLeft, Sparkles, CheckCircle, Building2, Users, Award, MessageCircle } from "lucide-react"
+import { Search, MapPin, Calendar, Car, TrendingUp, Star, Shield, Zap, ChevronLeft, ArrowLeft, Sparkles, CheckCircle, Building2, Users, Award } from "lucide-react"
 import { motion, useScroll, useTransform, useInView } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
-import { useQuery } from "@tanstack/react-query"
-import { officeService, carService } from "@/lib/supabase/services"
-import { formatCurrency, getCurrencyByCountry } from "@/lib/utils"
-import { getCountryByCode } from "@/lib/locations"
 import { Button } from "@/components/ui/button"
 import { ContactModal } from "@/components/layout/contact-modal"
+import { useQuery } from "@tanstack/react-query"
+import { officeService } from "@/lib/supabase/services"
+import { formatCurrency, getCurrencyByCountry } from "@/lib/utils"
 
 const popularSearches = [
   { city: "الرياض", cityEn: "Riyadh", country: "السعودية", countryEn: "KSA" },
@@ -22,15 +21,6 @@ const popularSearches = [
   { city: "الدوحة", cityEn: "Doha", country: "قطر", countryEn: "Qatar" },
   { city: "مسقط", cityEn: "Muscat", country: "عمان", countryEn: "Oman" },
   { city: "الكويت", cityEn: "Kuwait", country: "الكويت", countryEn: "Kuwait" },
-]
-
-const officeImages = [
-  "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400",
-  "https://images.unsplash.com/photo-1556189250-72ba954cfc2b?w=400",
-  "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400",
-  "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=400",
-  "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400",
-  "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400",
 ]
 
 const trendingCars = [
@@ -67,34 +57,6 @@ export default function HomePage() {
   }, [loading, isAuthenticated, profile, router])
   const [searchQuery, setSearchQuery] = useState("")
   const [showContact, setShowContact] = useState(false)
-  
-  const [userLocation, setUserLocation] = useState<{ country?: string; city?: string }>({})
-  
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedCountry = localStorage.getItem("userCountry")
-      const savedCity = localStorage.getItem("userCity")
-      if (savedCountry) setUserLocation(prev => ({ ...prev, country: savedCountry }))
-      if (savedCity) setUserLocation(prev => ({ ...prev, city: savedCity }))
-    }
-  }, [])
-
-  const { data: trendingOffices = [], isLoading: officesLoading } = useQuery({
-    queryKey: ["trending-offices"],
-    queryFn: () => officeService.getActive(),
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const { data: trendingCars = [], isLoading: carsLoading } = useQuery({
-    queryKey: ["trending-cars", userLocation.country, userLocation.city],
-    queryFn: () => carService.getAll({
-      country: userLocation.country || undefined,
-      city: userLocation.city || undefined,
-    }),
-    staleTime: 5 * 60 * 1000,
-    enabled: !!(userLocation.country || userLocation.city),
-  })
-
   const heroRef = useRef(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] })
   const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.6])
@@ -106,6 +68,12 @@ export default function HomePage() {
     if (searchQuery) params.set("q", searchQuery)
     router.push(`/cars?${params.toString()}`)
   }
+
+  const { data: trendingOffices = [], isLoading: officesLoading } = useQuery({
+    queryKey: ["trending-offices"],
+    queryFn: () => officeService.getActive(),
+    staleTime: 5 * 60 * 1000,
+  })
 
   return (
     <div>
@@ -195,13 +163,7 @@ export default function HomePage() {
               {t("home.trending")}
             </h2>
             <p className="text-sm text-muted-foreground mt-1.5">
-              {userLocation.country
-                ? locale === "ar"
-                  ? `سيارات رائجة في ${userLocation.city || userLocation.country}`
-                  : `Trending cars in ${userLocation.city || userLocation.country}`
-                : locale === "ar"
-                  ? "اختر موقعك لرؤية السيارات الرائجة"
-                  : "Select your location to see trending cars"}
+              {locale === "ar" ? "السيارات الأكثر طلباً" : "Most requested cars"}
             </p>
           </div>
           <Link href="/cars" className="group inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700 transition-colors">
@@ -209,112 +171,63 @@ export default function HomePage() {
             <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </motion.div>
-        {carsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse overflow-hidden">
-                <div className="h-44 bg-muted" />
-                <div className="p-4 space-y-3">
-                  <div className="h-5 bg-muted rounded w-3/4" />
-                  <div className="h-4 bg-muted rounded w-1/2" />
-                  <div className="flex gap-2">
-                    <div className="h-8 bg-muted rounded-lg w-16" />
-                    <div className="h-8 bg-muted rounded-lg w-16" />
+        <motion.div {...staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {trendingCars.map((car, i) => (
+            <motion.div
+              key={car.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
+              whileHover={{ y: -6 }}
+            >
+              <Link href={`/cars/${car.id}`}>
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                  <div className="relative h-44 overflow-hidden">
+                    <img
+                      src={car.image}
+                      alt={locale === "ar" ? car.title : car.titleEn}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                    <div className="absolute top-3 right-3">
+                      <span className="inline-flex items-center rounded-full bg-emerald-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                        {locale === "ar" ? "متاح" : "Available"}
+                      </span>
+                    </div>
+                    {car.badge === "best-deal" && (
+                      <div className="absolute top-3 left-3">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                          <Star className="w-3 h-3" />
+                          {locale === "ar" ? "أفضل عرض" : "Best Deal"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-primary text-sm leading-snug">
+                      {locale === "ar" ? car.title : car.titleEn}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-lg">{car.seats} {locale === "ar" ? "مقاعد" : "seats"}</span>
+                      <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-lg">{car.transmission === "أوتوماتيك" ? "Automatic" : "Manual"}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-4">
+                      <div>
+                        <span className="text-xl font-bold text-secondary">{car.price}</span>
+                        <span className="text-[10px] text-muted-foreground mr-1">{locale === "ar" ? "ريال/يوم" : "SAR/day"}</span>
+                      </div>
+                      <Button size="sm" className="rounded-xl shadow-lg shadow-secondary/20">
+                        {locale === "ar" ? "احجز الآن" : "Book Now"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : trendingCars.length > 0 ? (
-          <motion.div {...staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {trendingCars.slice(0, 8).map((car, i) => (
-              <motion.div
-                key={car.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
-                whileHover={{ y: -6 }}
-              >
-                <Link href={`/cars/${car.id}`}>
-                  <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
-                    <div className="relative h-44 overflow-hidden">
-                      <img
-                        src={car.image || "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400"}
-                        alt={car.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                      {car.status === "available" && (
-                        <div className="absolute top-3 right-3">
-                          <span className="inline-flex items-center rounded-full bg-emerald-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                            {locale === "ar" ? "متاح" : "Available"}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-primary text-sm leading-snug line-clamp-1">
-                        {car.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
-                        {car.seats && (
-                          <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-lg">
-                            <Users className="w-3 h-3" />
-                            {car.seats} {locale === "ar" ? "مقاعد" : "seats"}
-                          </span>
-                        )}
-                        {car.transmission && (
-                          <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-lg">
-                            <Car className="w-3 h-3" />
-                            {car.transmission === "AUTOMATIC" ? (locale === "ar" ? "أوتوماتيك" : "Automatic") : (locale === "ar" ? "يدوي" : "Manual")}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between mt-4">
-                        <div>
-                          {car.price && (
-                            <>
-                              <span className="text-xl font-bold text-secondary">
-                                {formatCurrency(Number(car.price), getCurrencyByCountry(car.office?.country).code)}
-                              </span>
-                              <span className="text-[10px] text-muted-foreground mr-1">
-                                {car.rental_type === "monthly" ? (locale === "ar" ? "/شهر" : "/month") : (locale === "ar" ? "/يوم" : "/day")}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <Button size="sm" className="rounded-xl shadow-lg shadow-secondary/20">
-                          {locale === "ar" ? "احجز الآن" : "Book Now"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        ) : (
-          <div className="text-center py-12">
-            <Car className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">
-              {userLocation.country
-                ? locale === "ar"
-                  ? "لا توجد سيارات رائجة في منطقتك حالياً"
-                  : "No trending cars in your area yet"
-                : locale === "ar"
-                  ? "اختر دولتك ومدينتك لرؤية السيارات الرائجة"
-                  : "Select your country and city to see trending cars"}
-            </p>
-            {!userLocation.country && (
-              <Link href="/cars" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700">
-                {locale === "ar" ? "تصفح السيارات" : "Browse cars"}
-                <ArrowLeft className="w-4 h-4" />
               </Link>
-            )}
-          </div>
-        )}
+            </motion.div>
+          ))}
+        </motion.div>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -337,64 +250,82 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse overflow-hidden">
-                <div className="h-36 bg-muted" />
+                <div className="h-40 bg-muted" />
                 <div className="p-4 space-y-3">
                   <div className="h-5 bg-muted rounded w-3/4" />
                   <div className="h-4 bg-muted rounded w-1/2" />
-                  <div className="h-9 bg-muted rounded-xl w-full" />
+                  <div className="flex gap-2">
+                    <div className="h-8 bg-muted rounded-lg w-16" />
+                    <div className="h-8 bg-muted rounded-lg w-16" />
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : trendingOffices.length > 0 ? (
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <motion.div {...staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {trendingOffices.slice(0, 8).map((office, i) => (
               <motion.div
                 key={office.id}
                 initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                whileHover={{ y: -4 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
+                whileHover={{ y: -6 }}
               >
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
-                  <div className="relative h-36 overflow-hidden">
-                    <img src={officeImages[i % officeImages.length]} alt={office.office_name} className="w-full h-full object-cover" loading="lazy" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                    <div className="absolute bottom-3 right-3">
+                <Link href={`/offices/${office.id}`}>
+                  <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                    <div className="relative h-40 overflow-hidden">
+                      <img
+                        src={office.logo || "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400"}
+                        alt={office.office_name || (locale === "ar" ? "مكتب تأجير" : "Rental Office")}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                       {office.is_active && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                          <Shield className="w-3 h-3" />
-                          {t("offices_page.verified") || (locale === "ar" ? "موثق" : "Verified")}
-                        </span>
+                        <div className="absolute top-3 right-3">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                            <CheckCircle className="w-3 h-3" />
+                            {locale === "ar" ? "نشط" : "Active"}
+                          </span>
+                        </div>
+                      )}
+                      {office.verified && (
+                        <div className="absolute top-3 left-3">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                            <Award className="w-3 h-3" />
+                            {locale === "ar" ? "موثق" : "Verified"}
+                          </span>
+                        </div>
                       )}
                     </div>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-primary">{office.office_name}</h3>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                    <div className="p-4">
+                      <h3 className="font-semibold text-primary text-sm leading-snug line-clamp-1">
+                        {office.office_name || (locale === "ar" ? "مكتب غير مسمى" : "Unnamed Office")}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-lg">
                           <MapPin className="w-3 h-3" />
-                          {office.city}, {getCountryByCode(office.country) ? (locale === "ar" ? getCountryByCode(office.country)?.nameAr : getCountryByCode(office.country)?.nameEn) : office.country}
-                        </p>
+                          {office.city || office.country || "-"}
+                        </span>
+                        <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-lg">
+                          <Users className="w-3 h-3" />
+                          {office.cars_count || 0} {locale === "ar" ? "سيارة" : "cars"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mt-4">
+                        <div>
+                          <span className="text-lg font-bold text-secondary">{office.rating || 5.0}</span>
+                          <span className="text-[10px] text-muted-foreground mr-1">{locale === "ar" ? "من 5" : "of 5"}</span>
+                        </div>
+                        <Button size="sm" className="rounded-xl shadow-lg shadow-secondary/20">
+                          {locale === "ar" ? "عرض السيارات" : "View Cars"}
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-lg">
-                        <MapPin className="w-3.5 h-3.5 text-secondary" />
-                        {office.city}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 pt-2">
-                      <Link href={`/offices/${office.id}`} className="flex-1">
-                        <Button size="sm" className="w-full">{t("offices_page.view_office") || (locale === "ar" ? "عرض المكتب" : "View Office")}</Button>
-                      </Link>
-                      <a href={`https://wa.me/${office.phone_number?.replace(/\s/g, "")}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-all">
-                        <MessageCircle className="w-4 h-4" />
-                      </a>
-                    </div>
                   </div>
-                </div>
+                </Link>
               </motion.div>
             ))}
           </motion.div>

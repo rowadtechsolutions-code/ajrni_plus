@@ -19,21 +19,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [showContact, setShowContact] = useState(false)
 
   useEffect(() => {
-    const link = document.createElement("link")
-    link.rel = "icon"
-    link.type = "image/png"
-    link.href = "/images/logo.png"
-    document.head.appendChild(link)
     const onScroll = () => setShowScrollTop(window.scrollY > 400)
     window.addEventListener("scroll", onScroll, { passive: true })
-    return () => {
-      window.removeEventListener("scroll", onScroll)
-      document.head.removeChild(link)
-    }
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/images/logo.png" />
+        <link rel="apple-touch-icon" href="/images/logo.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#2563eb" />
+      </head>
       <body className="min-h-screen bg-background antialiased">
         <QueryProvider>
           <AuthProvider>

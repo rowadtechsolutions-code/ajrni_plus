@@ -47,6 +47,12 @@ export const officeService = {
     if (error) throw error
     return data
   },
+
+  async updateProfile(officeId: string, updates: Record<string, any>) {
+    const { data, error } = await supabase.from("Offices").update(updates).eq("id", officeId).select().single()
+    if (error) throw error
+    return data
+  },
 }
 
 const BUCKET = "cars"
@@ -61,6 +67,22 @@ export const storageService = {
 
   async deleteCarImage(path: string) {
     const { error } = await supabase.storage.from(BUCKET).remove([path])
+    if (error) throw new Error(error.message || JSON.stringify(error))
+  },
+}
+
+const OFFICES_BUCKET = "Offices"
+
+export const officeStorageService = {
+  async uploadOfficeImage(file: File, path: string) {
+    const { data, error } = await supabase.storage.from(OFFICES_BUCKET).upload(path, file, { upsert: true })
+    if (error) throw new Error(error.message || JSON.stringify(error))
+    const { data: urlData } = supabase.storage.from(OFFICES_BUCKET).getPublicUrl(data.path)
+    return urlData.publicUrl
+  },
+
+  async deleteOfficeImage(path: string) {
+    const { error } = await supabase.storage.from(OFFICES_BUCKET).remove([path])
     if (error) throw new Error(error.message || JSON.stringify(error))
   },
 }
