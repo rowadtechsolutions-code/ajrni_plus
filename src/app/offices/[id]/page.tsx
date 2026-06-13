@@ -2,14 +2,16 @@
 
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { Shield, Phone, MessageCircle, MapPin } from "lucide-react"
+import { Shield, Phone, MessageCircle, MapPin, Car } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
-import { officeService } from "@/lib/supabase/services"
+import { officeService, carService } from "@/lib/supabase/services"
 import { getCountryByCode } from "@/lib/locations"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { CarCard } from "@/components/shared/car-card"
+import type { CarType } from "@/types"
 
 export default function OfficePage() {
   const { id } = useParams<{ id: string }>()
@@ -19,6 +21,12 @@ export default function OfficePage() {
   const { data: office, isLoading } = useQuery({
     queryKey: ["office", id],
     queryFn: () => officeService.getById(id),
+    enabled: !!id,
+  })
+
+  const { data: officeCars = [], isLoading: carsLoading } = useQuery({
+    queryKey: ["office-cars", id],
+    queryFn: () => carService.getByOffice(id),
     enabled: !!id,
   })
 
@@ -68,6 +76,20 @@ export default function OfficePage() {
             </div>
           </div>
         </div>
+      </div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <h2 className="text-xl font-bold text-primary mb-6 flex items-center gap-2"><Car className="w-5 h-5 text-secondary" />{locale === "ar" ? "سيارات المكتب" : "Office Cars"} ({officeCars.length})</h2>
+        {carsLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 3 }).map((_, i) => <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse h-72" />)}
+          </div>
+        ) : (officeCars as CarType[]).length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {(officeCars as CarType[]).map((car, i) => <CarCard key={car.id} car={car} index={i} />)}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-center py-10">{locale === "ar" ? "لا توجد سيارات متاحة" : "No cars available"}</p>
+        )}
       </div>
     </div>
   )

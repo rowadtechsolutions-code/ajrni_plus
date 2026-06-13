@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Search, MapPin, Calendar, Car, TrendingUp, Star, Shield, Zap, ChevronLeft, ArrowLeft, Sparkles, CheckCircle } from "lucide-react"
 import { motion, useScroll, useTransform, useInView } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
+import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
 import { Button } from "@/components/ui/button"
 import { ContactModal } from "@/components/layout/contact-modal"
@@ -44,6 +45,13 @@ export default function HomePage() {
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
   const router = useRouter()
+  const { isAuthenticated, profile, loading } = useAuthStore()
+
+  useEffect(() => {
+    if (!loading && isAuthenticated && profile?.role === "OFFICE") {
+      router.replace("/dashboard")
+    }
+  }, [loading, isAuthenticated, profile, router])
   const [searchQuery, setSearchQuery] = useState("")
   const [showContact, setShowContact] = useState(false)
   const heroRef = useRef(null)

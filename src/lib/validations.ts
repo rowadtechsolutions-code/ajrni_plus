@@ -30,23 +30,25 @@ export const officeRegisterSchema = z.object({
 })
 
 export const carSchema = z.object({
-  titleAr: z.string().min(2, "عنوان السيارة بالعربية مطلوب"),
-  titleEn: z.string().min(2, "عنوان السيارة بالإنجليزية مطلوب"),
-  brand: z.string().min(1, "العلامة التجارية مطلوبة"),
+  name: z.string().min(2, "اسم السيارة مطلوب"),
+  brand: z.string().min(1, "اختر العلامة التجارية"),
   model: z.string().min(1, "الموديل مطلوب"),
-  year: z.number().min(2000).max(2030),
-  pricePerDay: z.number().positive("السعر يجب أن يكون أكبر من صفر"),
-  seats: z.number().min(1).max(50),
-  transmission: z.enum(["AUTOMATIC", "MANUAL"]),
-  fuelType: z.enum(["GASOLINE", "DIESEL", "ELECTRIC", "HYBRID"]),
+  year: z.string().min(1, "سنة الصنع مطلوبة"),
   color: z.string().optional(),
-  descriptionAr: z.string().optional(),
-  descriptionEn: z.string().optional(),
-  airportDelivery: z.boolean().optional(),
-  withDriver: z.boolean().optional(),
-  country: z.string().min(1, "الدولة مطلوبة"),
-  city: z.string().min(1, "المدينة مطلوبة"),
+  transmission: z.string().min(1, "اختر نوع القير"),
+  fuel_type: z.string().min(1, "اختر نوع الوقود"),
+  seats: z.string().min(1, "عدد المقاعد مطلوب"),
+  price_per_day: z.string().min(1, "السعر اليومي مطلوب"),
+  status: z.enum(["available", "rented", "maintenance"]),
 })
+
+export const carStep1Schema = z.object({ name: z.string().min(2, "اسم السيارة مطلوب"), brand: z.string().min(1, "اختر العلامة التجارية"), model: z.string().optional() })
+export const carStep2Schema = z.object({ year: z.string().min(1, "سنة الصنع مطلوبة"), color: z.string().optional(), transmission: z.string().min(1, "اختر نوع القير"), fuel_type: z.string().min(1, "اختر نوع الوقود"), seats: z.string().min(1, "عدد المقاعد مطلوب"), plate_number: z.string().optional() })
+export const carStep3Schema = z.object({ rental_type: z.enum(["daily", "monthly"]), price: z.string().min(1, "السعر مطلوب"), status: z.enum(["available", "rented", "maintenance"]) })
+
+export type CarStep1Data = z.infer<typeof carStep1Schema>
+export type CarStep2Data = z.infer<typeof carStep2Schema>
+export type CarStep3Data = z.infer<typeof carStep3Schema>
 
 export const bookingSchema = z.object({
   carId: z.string(),

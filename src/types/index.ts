@@ -1,83 +1,47 @@
 export type Role = "CUSTOMER" | "OFFICE" | "ADMIN"
-export type OfficeStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED"
-export type BookingStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "CANCELLED" | "COMPLETED"
-export type CarStatus = "AVAILABLE" | "BOOKED" | "MAINTENANCE" | "UNAVAILABLE"
-export type Transmission = "AUTOMATIC" | "MANUAL"
-export type FuelType = "GASOLINE" | "DIESEL" | "ELECTRIC" | "HYBRID"
+export type CarStatus = "available" | "rented" | "maintenance"
 
 export interface UserType {
   id: string
-  name: string | null
-  email: string
-  image: string | null
-  phone: string | null
-  whatsapp: string | null
-  role: Role
-  locale: string
+  created_at: string
+  full_name: string | null
+  email: string | null
+  phone_number: string | null
+  country: string | null
+  city: string | null
 }
 
 export interface OfficeType {
   id: string
-  nameAr: string
-  nameEn: string
-  slug: string
-  email: string
-  phone: string
-  whatsapp: string | null
-  status: OfficeStatus
-  logo: string | null
-  coverImage: string | null
-  descriptionAr: string | null
-  descriptionEn: string | null
-  country: string
-  city: string
-  address: string | null
-  verified: boolean
-  featured: boolean
-  responseRate: number
-  responseTime: number
-  totalCars: number
-  totalBookings: number
-  rating: number
-  views: number
+  created_at: string
+  office_name: string | null
+  email: string | null
+  phone_number: string | null
+  country: string | null
+  city: string | null
+  is_active: boolean | null
 }
 
 export interface CarType {
   id: string
-  titleAr: string
-  titleEn: string
-  slug: string
-  brand: string
-  model: string
-  year: number
-  pricePerDay: number
-  currency: string
-  seats: number
-  transmission: Transmission
-  fuelType: FuelType
-  fuelCapacity: string | null
-  mileage: string | null
+  created_at: string
+  name: string
+  brand: string | null
+  model: string | null
+  year: number | null
   color: string | null
-  descriptionAr: string | null
-  descriptionEn: string | null
-  images: string[]
-  status: CarStatus
-  featured: boolean
-  availableNow: boolean
-  airportDelivery: boolean
-  withDriver: boolean
-  insurance: boolean
-  unlimitedMileage: boolean
-  airConditioning: boolean
-  gps: boolean
-  bluetooth: boolean
-  usbPort: boolean
-  views: number
-  country: string
-  city: string
-  pickupLocation: string | null
-  office: OfficeType
-  officeId: string
+  transmission: string | null
+  fuel_type: string | null
+  seats: number | null
+  plate_number: string | null
+  rental_type: string
+  price: string | null
+  status: string
+  is_active: boolean
+  owner_id: string
+  office_id: string | null
+  image: string | null
+  office: OfficeType | null
 }
 
 export interface BookingType {
@@ -91,24 +55,23 @@ export interface BookingType {
   message: string | null
   status: BookingStatus
   totalAmount: number | null
-  officeNotes: string | null
   car: CarType
   customer: UserType
   office: OfficeType
 }
 
+export type BookingStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "CANCELLED" | "COMPLETED"
+export type Transmission = "AUTOMATIC" | "MANUAL"
+export type FuelType = "GASOLINE" | "DIESEL" | "ELECTRIC" | "HYBRID"
+
 export interface CarFilters {
-  country?: string
-  city?: string
   brand?: string
-  model?: string
   minPrice?: number
   maxPrice?: number
   seats?: number
-  transmission?: Transmission
-  fuelType?: FuelType
-  availableNow?: boolean
-  airportDelivery?: boolean
-  withDriver?: boolean
-  sortBy?: string
+  transmission?: string
+  fuel_type?: string
+  status?: string
+  country?: string
+  city?: string
 }

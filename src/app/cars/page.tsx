@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { SlidersHorizontal, X, Search, ArrowLeft, Sparkles } from "lucide-react"
+import { useState, useEffect } from "react"
+import { SlidersHorizontal, X, Search, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { useLocaleStore } from "@/store/useLocaleStore"
@@ -9,49 +9,88 @@ import { useTranslation } from "@/lib/i18n"
 import { carService } from "@/lib/supabase/services"
 import { Button } from "@/components/ui/button"
 import { CarCard } from "@/components/shared/car-card"
-import type { CarType, Transmission, FuelType } from "@/types"
+import { brands } from "@/lib/brands"
+import { gulfCountries, getCitiesByCountryCode } from "@/lib/locations"
+import { getCurrencyByCountry } from "@/lib/utils"
+import type { CarType } from "@/types"
 
-const brands = ["Toyota", "Nissan", "Honda", "Mercedes", "BMW", "Audi", "Hyundai", "Kia", "Lexus", "Porsche"]
+const fuelTypes = ["GASOLINE", "DIESEL", "ELECTRIC", "HYBRID"]
+const transmissions = ["AUTOMATIC", "MANUAL"]
 
 export default function CarsPage() {
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
   const [showFilters, setShowFilters] = useState(false)
   const [search, setSearch] = useState("")
-  const [filters, setFilters] = useState({ brand: "", transmission: "" as Transmission | "", fuelType: "" as FuelType | "", minPrice: "", maxPrice: "", seats: "", availableNow: false })
+  const [countryFilter, setCountryFilter] = useState("")
+  const [cityFilter, setCityFilter] = useState("")
+
+  useEffect(() => {
+    const saved = localStorage.getItem("userCountry")
+    if (saved) setCountryFilter(saved)
+  }, [])
+  const [filters, setFilters] = useState({ brand: "", transmission: "", fuel_type: "", minPrice: "", maxPrice: "", seats: "" })
   const [sortBy, setSortBy] = useState("newest")
 
-  const { data: cars = [], isLoading } = useQuery({
-    queryKey: ["cars", filters],
+  const cities = countryFilter ? getCitiesByCountryCode(countryFilter) : []
+
+  const { data: cars = [], isLoading, error } = useQuery({
+    queryKey: ["cars", filters, countryFilter, cityFilter],
     queryFn: () => carService.getAll({
       brand: filters.brand || undefined,
-      transmission: (filters.transmission as Transmission) || undefined,
-      fuelType: (filters.fuelType as FuelType) || undefined,
+      transmission: filters.transmission || undefined,
+      fuel_type: filters.fuel_type || undefined,
       minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
       maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
-      availableNow: filters.availableNow || undefined,
+      seats: filters.seats ? Number(filters.seats) : undefined,
+      country: countryFilter || undefined,
+      city: cityFilter || undefined,
     }),
     staleTime: 30_000,
   })
 
   const filteredCars = (cars as CarType[]).filter((car) => {
-    const title = locale === "ar" ? car.titleAr : car.titleEn
-    if (search && !title.toLowerCase().includes(search.toLowerCase())) return false
-    if (filters.seats && car.seats < Number(filters.seats)) return false
+    if (search && !car.name.toLowerCase().includes(search.toLowerCase())) return false
     return true
   }).sort((a, b) => {
-    if (sortBy === "price_low") return a.pricePerDay - b.pricePerDay
-    if (sortBy === "price_high") return b.pricePerDay - a.pricePerDay
+    const aPrice = Number(a.price || 0)
+    const bPrice = Number(b.price || 0)
+    if (sortBy === "price_low") return aPrice - bPrice
+    if (sortBy === "price_high") return bPrice - aPrice
     return 0
   })
+
+  const changeCountry = (val: string) => {
+    setCountryFilter(val)
+    setCityFilter("")
+    if (typeof window !== "undefined") localStorage.setItem("userCountry", val)
+  }
+
+  const cur = getCurrencyByCountry(countryFilter || undefined)
 
   const FilterContent = () => (
     <div className="space-y-5">
       <div>
+        <label className="block text-sm font-medium text-primary mb-2">{locale === "ar" ? "الدولة" : "Country"}</label>
+        <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={countryFilter} onChange={(e) => changeCountry(e.target.value)}>
+          <option value="">{locale === "ar" ? "الكل" : "All"}</option>
+          {gulfCountries.map((c) => <option key={c.code} value={c.code}>{locale === "ar" ? c.nameAr : c.nameEn}</option>)}
+        </select>
+      </div>
+      {countryFilter && cities.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium text-primary mb-2">{locale === "ar" ? "المدينة" : "City"}</label>
+          <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}>
+            <option value="">{locale === "ar" ? "الكل" : "All"}</option>
+            {cities.map((c) => <option key={c.nameAr} value={c.nameAr}>{locale === "ar" ? c.nameAr : c.nameEn}</option>)}
+          </select>
+        </div>
+      )}
+      <div>
         <label className="block text-sm font-medium text-primary mb-2">{t("cars.brand")}</label>
         <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={filters.brand} onChange={(e) => setFilters({ ...filters, brand: e.target.value })}>
           <option value="">{locale === "ar" ? "الكل" : "All"}</option>
-          {brands.map((b) => <option key={b} value={b}>{b}</option>)}
+          {brands.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}
         </select>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -66,26 +105,26 @@ export default function CarsPage() {
       </div>
       <div>
         <label className="block text-sm font-medium text-primary mb-2">{t("cars.transmission")}</label>
-        <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={filters.transmission} onChange={(e) => setFilters({ ...filters, transmission: e.target.value as Transmission | "" })}>
+        <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={filters.transmission} onChange={(e) => setFilters({ ...filters, transmission: e.target.value })}>
           <option value="">{locale === "ar" ? "الكل" : "All"}</option>
-          <option value="AUTOMATIC">{t("cars.automatic")}</option>
-          <option value="MANUAL">{t("cars.manual")}</option>
+          {transmissions.map((tr) => <option key={tr} value={tr}>{tr === "AUTOMATIC" ? t("cars.automatic") : t("cars.manual")}</option>)}
         </select>
       </div>
       <div>
         <label className="block text-sm font-medium text-primary mb-2">{t("cars.fuel_type")}</label>
-        <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={filters.fuelType} onChange={(e) => setFilters({ ...filters, fuelType: e.target.value as FuelType | "" })}>
+        <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={filters.fuel_type} onChange={(e) => setFilters({ ...filters, fuel_type: e.target.value })}>
           <option value="">{locale === "ar" ? "الكل" : "All"}</option>
-          <option value="GASOLINE">{locale === "ar" ? "بنزين" : "Gasoline"}</option>
-          <option value="DIESEL">{locale === "ar" ? "ديزل" : "Diesel"}</option>
-          <option value="ELECTRIC">{locale === "ar" ? "كهرباء" : "Electric"}</option>
+          {fuelTypes.map((f) => <option key={f} value={f}>{f === "GASOLINE" ? (locale === "ar" ? "بنزين" : "Gasoline") : f === "DIESEL" ? (locale === "ar" ? "ديزل" : "Diesel") : f === "ELECTRIC" ? (locale === "ar" ? "كهرباء" : "Electric") : (locale === "ar" ? "هايبرد" : "Hybrid")}</option>)}
         </select>
       </div>
-      <label className="flex items-center gap-2 cursor-pointer p-3 rounded-2xl hover:bg-muted transition-all">
-        <input type="checkbox" className="w-4 h-4 rounded border-border text-secondary accent-secondary" checked={filters.availableNow} onChange={(e) => setFilters({ ...filters, availableNow: e.target.checked })} />
-        <span className="text-sm text-primary">{t("cars.available_now")}</span>
-      </label>
-      <Button variant="outline" className="w-full rounded-2xl" onClick={() => setFilters({ brand: "", transmission: "", fuelType: "", minPrice: "", maxPrice: "", seats: "", availableNow: false })}>
+      <div>
+        <label className="block text-sm font-medium text-primary mb-2">{t("cars.seats")}</label>
+        <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={filters.seats} onChange={(e) => setFilters({ ...filters, seats: e.target.value })}>
+          <option value="">{locale === "ar" ? "الكل" : "All"}</option>
+          {[2, 3, 4, 5, 6, 7, 8].map((s) => <option key={s} value={s}>{s}+</option>)}
+        </select>
+      </div>
+      <Button variant="outline" className="w-full rounded-2xl" onClick={() => { setFilters({ brand: "", transmission: "", fuel_type: "", minPrice: "", maxPrice: "", seats: "" }); setCountryFilter(""); setCityFilter("") }}>
         {t("cars.reset_filters")}
       </Button>
     </div>
@@ -109,13 +148,27 @@ export default function CarsPage() {
               <h1 className="text-2xl md:text-3xl font-bold text-primary">{t("cars.title")}</h1>
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-accent" />
-                {isLoading ? "..." : `${filteredCars.length} ${locale === "ar" ? "سيارة متاحة" : "cars available"}`}
+                {isLoading ? "..." : `${filteredCars.length} ${locale === "ar" ? "سيارة متاحة" : "cars available"}${cur ? ` (${locale === "ar" ? cur.nameAr : cur.symbol})` : ""}`}
               </p>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:flex-initial">
+                <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={countryFilter} onChange={(e) => changeCountry(e.target.value)}>
+                  <option value="">{locale === "ar" ? "كل الدول" : "All Countries"}</option>
+                  {gulfCountries.map((c) => <option key={c.code} value={c.code}>{locale === "ar" ? c.nameAr : c.nameEn}</option>)}
+                </select>
+              </div>
+              {countryFilter && cities.length > 0 && (
+                <div className="relative flex-1 sm:flex-initial">
+                  <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}>
+                    <option value="">{locale === "ar" ? "كل المدن" : "All Cities"}</option>
+                    {cities.map((c) => <option key={c.nameAr} value={c.nameAr}>{locale === "ar" ? c.nameAr : c.nameEn}</option>)}
+                  </select>
+                </div>
+              )}
+              <div className="relative flex-1 sm:flex-initial">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("nav.search")} className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all pl-10 w-full sm:w-52" />
+                <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={locale === "ar" ? "بحث..." : "Search..."} className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all pr-10 sm:w-52" />
               </div>
               <select className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                 <option value="newest">{t("cars.newest")}</option>
@@ -148,13 +201,18 @@ export default function CarsPage() {
               {filteredCars.map((car, i) => <CarCard key={car.id} car={car} index={i} />)}
             </motion.div>
           )}
-          {!isLoading && filteredCars.length === 0 && (
+          {error && (
+            <div className="text-center py-10 text-red-500">
+              <p>Error: {(error as Error).message}</p>
+            </div>
+          )}
+          {!isLoading && filteredCars.length === 0 && !error && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                 <Search className="w-6 h-6 text-muted-foreground" />
               </div>
               <p className="text-muted-foreground">{t("cars.no_results")}</p>
-              <Button variant="outline" className="mt-4 rounded-2xl" onClick={() => { setFilters({ brand: "", transmission: "", fuelType: "", minPrice: "", maxPrice: "", seats: "", availableNow: false }); setSearch("") }}>
+              <Button variant="outline" className="mt-4 rounded-2xl" onClick={() => { setFilters({ brand: "", transmission: "", fuel_type: "", minPrice: "", maxPrice: "", seats: "" }); setSearch(""); setCountryFilter(""); setCityFilter("") }}>
                 {t("cars.reset_filters")}
               </Button>
             </motion.div>
@@ -178,7 +236,7 @@ export default function CarsPage() {
                   {t("cars.filters")}
                 </h3>
                 <button onClick={() => setShowFilters(false)} className="p-2 rounded-2xl hover:bg-muted transition-all">
-                  <ArrowLeft className="w-5 h-5" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               <FilterContent />

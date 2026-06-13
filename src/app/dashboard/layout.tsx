@@ -2,15 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Car, CalendarCheck, TrendingUp, User } from "lucide-react"
+import { Car, TrendingUp, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "dashboard.overview" },
   { href: "/dashboard/cars", icon: Car, label: "dashboard.my_cars" },
-  { href: "/dashboard/requests", icon: CalendarCheck, label: "dashboard.requests" },
   { href: "/dashboard/analytics", icon: TrendingUp, label: "dashboard.analytics" },
   { href: "/dashboard/profile", icon: User, label: "dashboard.profile" },
 ]

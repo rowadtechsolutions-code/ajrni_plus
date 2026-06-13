@@ -2,20 +2,26 @@
 
 import { useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { getClient } from "@/lib/supabase/client"
 import { useAuthStore } from "@/store/useAuthStore"
+
+const supabase = getClient()
 
 export function useAuth() {
   const router = useRouter()
-  const supabase = createClient()
   const store = useAuthStore()
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
-    router.push("/")
+    const role = data.user?.user_metadata?.role
+    if (role === "OFFICE") {
+      router.push("/dashboard")
+    } else {
+      router.push("/")
+    }
     router.refresh()
-  }, [router, supabase])
+  }, [router])
 
   const signUp = useCallback(async (data: {
     email: string
@@ -43,7 +49,6 @@ export function useAuth() {
     })
     if (error) throw error
 
-    // إذا في session (تأكيد الإيميل مفطّل)، نسوي client inserts
     if (authData?.session) {
       await supabase.auth.setSession(authData.session)
 
@@ -72,15 +77,14 @@ export function useAuth() {
 
       await supabase.auth.signOut()
     }
-    // إذا ما في session (تأكيد الإيميل شغال)، الـ trigger هو المسؤول
-  }, [supabase])
+  }, [])
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
     store.clearSession()
     router.push("/")
     router.refresh()
-  }, [router, supabase, store])
+  }, [router, store])
 
   return { ...store, signIn, signUp, signOut }
 }

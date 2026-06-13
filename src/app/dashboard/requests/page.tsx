@@ -50,7 +50,7 @@ export default function DashboardRequestsPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-primary">{req.customerName}</h3>
-                  <p className="text-sm text-muted-foreground">{req.car?.titleAr || req.car?.titleEn || (locale === "ar" ? "سيارة" : "Car")}</p>
+                  <p className="text-sm text-muted-foreground">{req.car?.name || (locale === "ar" ? "سيارة" : "Car")}</p>
                   <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                     <span>{req.startDate} - {req.endDate}</span>
                     {req.totalAmount && <span className="font-semibold text-secondary">{req.totalAmount} {locale === "ar" ? "ريال" : "SAR"}</span>}

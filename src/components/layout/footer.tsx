@@ -35,9 +35,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="space-y-5">
             <Link href="/" className="inline-flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary to-blue-700 flex items-center justify-center text-white font-bold shadow-lg shadow-secondary/25 transition-transform duration-300 group-hover:scale-105">
-                أ
-              </div>
+              <img src="/images/logo.png" alt="Ajrni" className="w-10 h-10 object-contain" />
               <div>
                 <span className="text-xl font-bold tracking-tight">أجرني</span>
                 <span className="text-sm text-white/40 font-medium mr-1.5">| Ajrni</span>

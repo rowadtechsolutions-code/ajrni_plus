@@ -3,7 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, User, LogOut, LayoutDashboard, Shield, Heart, Globe } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import { Menu, X, User, LogOut, LayoutDashboard, Shield, Heart, Globe, Car, BarChart3 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -20,6 +21,8 @@ const navItems = [
   { href: "/contact", labelKey: "nav.contact" },
 ]
 
+const officeNavItems: { href: string; labelKey: string; icon: LucideIcon }[] = []
+
 export function Header() {
   const [mobileMenu, setMobileMenu] = useState(false)
   const pathname = usePathname()
@@ -35,9 +38,7 @@ export function Header() {
           <div className="flex items-center justify-between lg:grid lg:grid-cols-3 h-16 lg:h-20">
             {/* START - Logo */}
             <Link href="/" className="flex items-center gap-2.5 shrink-0">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary to-blue-700 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-secondary/20 transition-transform duration-300 hover:scale-105">
-                أ
-              </div>
+              <img src="/images/logo.png" alt="Ajrni" className="w-8 h-8 object-contain" />
               <div className="flex items-baseline gap-1">
                 <span className="text-lg font-bold text-primary tracking-tight">أجرني</span>
                 <span className="hidden sm:inline text-xs text-muted-foreground/70 font-medium">| Ajrni</span>
@@ -46,8 +47,9 @@ export function Header() {
 
             {/* CENTER - Nav links */}
             <nav className="hidden lg:flex items-center justify-center gap-1">
-              {navItems.map((item) => {
+              {(profile?.role === "OFFICE" ? officeNavItems : navItems).map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+                const NavIcon = "icon" in item ? (item as typeof officeNavItems[number]).icon : null
                 return (
                   <Link
                     key={item.href}
@@ -59,6 +61,7 @@ export function Header() {
                         : "text-muted-foreground hover:text-primary"
                     )}
                   >
+                    {NavIcon && <NavIcon className="w-4 h-4 inline ml-1.5" />}
                     {t(item.labelKey)}
                     {isActive && (
                       <motion.span
@@ -101,12 +104,6 @@ export function Header() {
                         <Shield className="w-4 h-4" />
                       </Link>
                     )}
-                    <button
-                      onClick={() => signOut()}
-                      className="p-2 rounded-xl text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-all duration-200"
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </button>
                     <Link
                       href="/profile"
                       className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary to-blue-700 text-white flex items-center justify-center text-xs font-bold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
@@ -156,7 +153,10 @@ export function Header() {
               className="absolute top-0 bottom-0 left-0 w-80 max-w-[85vw] bg-white shadow-2xl"
             >
               <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                <span className="text-lg font-bold text-primary">أجرني</span>
+                <div className="flex items-center gap-2">
+                  <img src="/images/logo.png" alt="Ajrni" className="w-7 h-7 object-contain" />
+                  <span className="text-lg font-bold text-primary">أجرني</span>
+                </div>
                 <button onClick={() => setMobileMenu(false)} className="p-2 rounded-xl hover:bg-gray-100 transition-all">
                   <X className="w-5 h-5" />
                 </button>
@@ -178,21 +178,25 @@ export function Header() {
               </div>
 
               <div className="p-4 space-y-1">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenu(false)}
-                    className={cn(
-                      "block px-4 py-3 text-sm font-medium rounded-2xl transition-all duration-200",
-                      pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
-                        ? "text-secondary bg-secondary/5"
-                        : "text-muted-foreground hover:text-primary hover:bg-gray-50"
-                    )}
-                  >
-                    {t(item.labelKey)}
-                  </Link>
-                ))}
+                {(profile?.role === "OFFICE" ? officeNavItems : navItems).map((item) => {
+                  const NavIcon = "icon" in item ? (item as typeof officeNavItems[number]).icon : null
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenu(false)}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-2xl transition-all duration-200",
+                        pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+                          ? "text-secondary bg-secondary/5"
+                          : "text-muted-foreground hover:text-primary hover:bg-gray-50"
+                      )}
+                    >
+                      {NavIcon && <NavIcon className="w-4 h-4" />}
+                      {t(item.labelKey)}
+                    </Link>
+                  )
+                })}
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">

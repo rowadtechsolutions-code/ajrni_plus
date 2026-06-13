@@ -19,9 +19,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [showContact, setShowContact] = useState(false)
 
   useEffect(() => {
+    const link = document.createElement("link")
+    link.rel = "icon"
+    link.type = "image/png"
+    link.href = "/images/logo.png"
+    document.head.appendChild(link)
     const onScroll = () => setShowScrollTop(window.scrollY > 400)
     window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      document.head.removeChild(link)
+    }
   }, [])
 
   return (

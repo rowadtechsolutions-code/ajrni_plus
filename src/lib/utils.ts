@@ -5,12 +5,33 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export const countryCurrency: Record<string, { code: string; symbol: string; nameAr: string }> = {
+  OM: { code: "OMR", symbol: "ر.ع.", nameAr: "ريال عماني" },
+  SA: { code: "SAR", symbol: "ر.س.", nameAr: "ريال سعودي" },
+  AE: { code: "AED", symbol: "د.إ.", nameAr: "درهم إماراتي" },
+  QA: { code: "QAR", symbol: "ر.ق.", nameAr: "ريال قطري" },
+  KW: { code: "KWD", symbol: "د.ك.", nameAr: "دينار كويتي" },
+  BH: { code: "BHD", symbol: "د.ب.", nameAr: "دينار بحريني" },
+}
+
+export function getCurrencyByCountry(country: string | null | undefined) {
+  if (country && countryCurrency[country]) return countryCurrency[country]
+  return { code: "SAR", symbol: "ر.س.", nameAr: "ريال سعودي" }
+}
+
 export function formatCurrency(amount: number, currency = "SAR") {
   return new Intl.NumberFormat("ar-SA", {
     style: "currency",
     currency,
     minimumFractionDigits: 0,
   }).format(amount)
+}
+
+export function formatCarPrice(car: { price?: string | null; rental_type?: string | null; office?: { country?: string | null } | null }) {
+  const cur = getCurrencyByCountry(car.office?.country)
+  const amount = Number(car.price || 0)
+  const formatted = formatCurrency(amount, cur.code)
+  return { amount: formatted, isMonthly: car.rental_type === "monthly", currency: cur }
 }
 
 export function slugify(text: string) {

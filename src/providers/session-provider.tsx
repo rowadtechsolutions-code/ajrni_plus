@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { getClient } from "@/lib/supabase/client"
 import { useAuthStore } from "@/store/useAuthStore"
 
 function enrichProfile(session: any, profile: any) {
@@ -13,7 +13,7 @@ function enrichProfile(session: any, profile: any) {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setSession, clearSession, setLoading } = useAuthStore()
-  const supabase = createClient()
+  const supabase = getClient()
 
   useEffect(() => {
     setLoading(true)

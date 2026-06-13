@@ -1,13 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { Heart, MapPin, Users, Gauge, Star, Shield, Zap, CheckCircle } from "lucide-react"
+import { Heart, Users, Gauge, Star, MapPin } from "lucide-react"
 import { motion } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useWishlistStore } from "@/store/useWishlistStore"
 import { useTranslation } from "@/lib/i18n"
-import { cn, formatCurrency, getImageUrl } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
+import { cn, formatCurrency, getCurrencyByCountry } from "@/lib/utils"
 import type { CarType } from "@/types"
 
 interface CarCardProps {
@@ -21,8 +20,6 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
   const { isWishlisted, toggleItem } = useWishlistStore()
   const wishlisted = isWishlisted(car.id)
 
-  const title = locale === "ar" ? car.titleAr : car.titleEn
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -35,29 +32,16 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
         <div className="relative h-full bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-gray-200 transition-all duration-300 overflow-hidden group">
           <div className="relative h-48 overflow-hidden">
             <img
-              src={getImageUrl(car.images[0])}
-              alt={title}
+              src={car.image || "/placeholder.svg"}
+              alt={car.name}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
               loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
-              {car.availableNow && (
+              {car.status === "available" && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                  <Zap className="w-3 h-3" />
                   {locale === "ar" ? "متاح الآن" : "Available Now"}
-                </span>
-              )}
-              {car.featured && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-accent/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                  <Star className="w-3 h-3" />
-                  {locale === "ar" ? "أفضل عرض" : "Best Deal"}
-                </span>
-              )}
-              {car.office?.verified && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-secondary/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                  <Shield className="w-3 h-3" />
-                  {locale === "ar" ? "موثق" : "Verified"}
                 </span>
               )}
             </div>
@@ -72,28 +56,26 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
           <div className="p-4 space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-primary leading-snug line-clamp-1">{title}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{car.brand} {car.model} {car.year}</p>
+                <h3 className="font-semibold text-primary leading-snug line-clamp-1">{car.name}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{car.brand} {car.year}</p>
               </div>
               <div className="text-left shrink-0">
-                <p className="text-lg font-bold text-secondary">{formatCurrency(car.pricePerDay, car.currency)}</p>
-                <p className="text-[10px] text-muted-foreground">{t("cars.per_day")}</p>
+                  <p className="text-lg font-bold text-secondary">{formatCurrency(Number(car.price || 0), getCurrencyByCountry(car.office?.country).code)}</p>
+                  <p className="text-[10px] text-muted-foreground">{car.rental_type === "monthly" ? (locale === "ar" ? "شهر" : "month") : t("cars.per_day")}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-lg">
-                <Users className="w-3.5 h-3.5 text-secondary" />
-                {car.seats}
-              </span>
-              <span className="flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-lg">
-                <Gauge className="w-3.5 h-3.5 text-secondary" />
-                {car.transmission === "AUTOMATIC" ? t("cars.automatic") : t("cars.manual")}
-              </span>
-              {car.airportDelivery && (
-                <span className="flex items-center gap-1 bg-info/10 text-info px-2.5 py-1 rounded-lg font-medium">
-                  <CheckCircle className="w-3 h-3" />
-                  <span className="text-[10px]">{locale === "ar" ? "توصيل مطار" : "Airport"}</span>
+              {car.seats && (
+                <span className="flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-lg">
+                  <Users className="w-3.5 h-3.5 text-secondary" />
+                  {car.seats}
+                </span>
+              )}
+              {car.transmission && (
+                <span className="flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-lg">
+                  <Gauge className="w-3.5 h-3.5 text-secondary" />
+                  {car.transmission === "AUTOMATIC" ? t("cars.automatic") : t("cars.manual")}
                 </span>
               )}
             </div>
@@ -101,15 +83,15 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
             {car.office && (
               <div className="flex items-center gap-2 pt-2 border-t border-gray-50">
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-secondary/20 to-blue-600/20 flex items-center justify-center text-[10px] font-bold text-secondary">
-                  {car.office.nameAr?.[0] || car.office.nameEn?.[0] || "O"}
+                  {car.office.office_name?.[0] || "O"}
                 </div>
                 <span className="text-xs text-muted-foreground flex-1 truncate">
-                  {locale === "ar" ? car.office.nameAr : car.office.nameEn}
+                  {car.office.office_name}
                 </span>
-                {car.office.rating && (
-                  <span className="flex items-center gap-1 text-xs text-accent font-medium">
-                    <Star className="w-3 h-3 fill-accent" />
-                    {car.office.rating}
+                {(car.office.city || car.office.country) && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin className="w-3 h-3" />
+                    {car.office.city || car.office.country}
                   </span>
                 )}
               </div>

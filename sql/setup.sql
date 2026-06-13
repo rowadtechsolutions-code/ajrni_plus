@@ -76,4 +76,55 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- ========== CARS ==========
+create table if not exists public.cars (
+  id uuid not null default gen_random_uuid(),
+  created_at timestamp with time zone null default now(),
+  name text not null,
+  brand text null,
+  year integer null,
+  color text null,
+  fuel_type text null,
+  transmission text null,
+  seats integer null,
+  plate_number text null,
+  rental_type text not null default 'daily'::text,
+  price_per_day numeric(10,2) not null,
+  price_per_month numeric(10,2) null,
+  deposit numeric(10,2) null default 0,
+  status text null default 'available'::text,
+  is_active boolean null default true,
+  office_id uuid null,
+  owner_id uuid not null,
+  image text null,
+  constraint cars_pkey primary key (id),
+  constraint cars_plate_number_key unique (plate_number),
+  constraint cars_office_id_fkey foreign key (office_id) references "Offices" (id) on delete cascade,
+  constraint cars_owner_id_fkey foreign key (owner_id) references auth.users (id) on delete cascade
+);
+
+alter table public.cars enable row level security;
+
+create policy "Cars readable by all" on public.cars for select using (true);
+create policy "Cars insertable by owner" on public.cars for insert with check (owner_id = auth.uid());
+create policy "Cars updatable by owner" on public.cars for update using (owner_id = auth.uid());
+create policy "Cars deletable by owner" on public.cars for delete using (owner_id = auth.uid());
+
+-- ========== STORAGE (car-images bucket) ==========
+insert into storage.buckets (id, name, public)
+values ('car-images', 'car-images', true)
+on conflict (id) do nothing;
+
+create policy "Car images publicly readable"
+  on storage.objects for select
+  using (bucket_id = 'car-images');
+
+create policy "Car images uploaded by owner"
+  on storage.objects for insert
+  with check (bucket_id = 'car-images' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "Car images deletable by owner"
+  on storage.objects for delete
+  using (bucket_id = 'car-images' and (storage.foldername(name))[1] = auth.uid()::text);
+
 NOTIFY pgrst, 'reload schema';
