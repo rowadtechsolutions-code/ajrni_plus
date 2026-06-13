@@ -1,12 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { Heart, Users, Gauge, Star, MapPin } from "lucide-react"
+import { Heart, Users, Gauge, Star, MapPin, MessageCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useWishlistStore } from "@/store/useWishlistStore"
 import { useTranslation } from "@/lib/i18n"
-import { cn, formatCurrency, getCurrencyByCountry } from "@/lib/utils"
+import { useAuthStore } from "@/store/useAuthStore"
+import { cn, formatCurrency, getCurrencyByCountry, openWhatsAppReservation } from "@/lib/utils"
 import type { CarType } from "@/types"
 
 interface CarCardProps {
@@ -18,7 +19,13 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
   const { isWishlisted, toggleItem } = useWishlistStore()
+  const { profile } = useAuthStore()
   const wishlisted = isWishlisted(car.id)
+
+  const handleReserve = () => {
+    const userPhone = profile?.phone_number || ""
+    openWhatsAppReservation(car, userPhone)
+  }
 
   return (
     <motion.div
@@ -96,6 +103,13 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
                 )}
               </div>
             )}
+            <button
+              onClick={handleReserve}
+              className="w-full mt-4 rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold text-white hover:bg-secondary/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              {locale === "ar" ? "احجز الآن" : "Reserve Now"}
+            </button>
           </div>
         </div>
       </Link>

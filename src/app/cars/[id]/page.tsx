@@ -7,21 +7,21 @@ import { Heart, Share2, Phone, MessageCircle, MapPin, Users, Gauge, Fuel, Calend
 import { motion } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useWishlistStore } from "@/store/useWishlistStore"
+import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
 import { carService } from "@/lib/supabase/services"
-import { formatCurrency, cn, getCurrencyByCountry } from "@/lib/utils"
+import { formatCurrency, cn, getCurrencyByCountry, openWhatsAppReservation } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CarCard } from "@/components/shared/car-card"
 import type { CarType } from "@/types"
-
-const WHATSAPP_NUMBER = "96876972871"
 
 export default function CarDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
   const { isWishlisted, toggleItem } = useWishlistStore()
+  const { profile } = useAuthStore()
 
   const { data: car, isLoading } = useQuery({
     queryKey: ["car", id],
@@ -142,9 +142,15 @@ export default function CarDetailsPage() {
                 <a href={`tel:${office.phone_number}`} className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-6 py-3 text-sm font-medium hover:bg-gray-50 transition-all w-full">
                   <Phone className="w-4 h-4" />{t("car_details.call")}
                 </a>
-                <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" className="flex items-center justify-center gap-2 rounded-xl border border-success/30 px-6 py-3 text-sm font-medium text-success hover:bg-success/5 transition-all w-full">
-                  <MessageCircle className="w-4 h-4" />{t("car_details.whatsapp")}
-                </a>
+                <Button
+                  className="w-full rounded-xl bg-success px-6 py-3 text-sm font-medium text-white hover:bg-success/90 transition-all flex items-center justify-center gap-2"
+                  onClick={() => {
+                    const userPhone = profile?.phone_number || ""
+                    openWhatsAppReservation(c, userPhone)
+                  }}
+                >
+                  <MessageCircle className="w-4 h-4" />{locale === "ar" ? "احجز الآن" : "Reserve Now"}
+                </Button>
               </div>
             </div>
           )}

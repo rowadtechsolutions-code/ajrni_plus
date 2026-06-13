@@ -3,13 +3,16 @@
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, Calendar, Car, TrendingUp, Star, Shield, Zap, ChevronLeft, ArrowLeft, Sparkles, CheckCircle } from "lucide-react"
+import { Search, MapPin, Calendar, Car, TrendingUp, Star, Shield, Zap, ChevronLeft, ArrowLeft, Sparkles, CheckCircle, Building2, Users, Award } from "lucide-react"
 import { motion, useScroll, useTransform, useInView } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
 import { Button } from "@/components/ui/button"
 import { ContactModal } from "@/components/layout/contact-modal"
+import { useQuery } from "@tanstack/react-query"
+import { officeService } from "@/lib/supabase/services"
+import { formatCurrency, getCurrencyByCountry } from "@/lib/utils"
 
 const popularSearches = [
   { city: "الرياض", cityEn: "Riyadh", country: "السعودية", countryEn: "KSA" },
@@ -65,6 +68,12 @@ export default function HomePage() {
     if (searchQuery) params.set("q", searchQuery)
     router.push(`/cars?${params.toString()}`)
   }
+
+  const { data: trendingOffices = [], isLoading: officesLoading } = useQuery({
+    queryKey: ["trending-offices"],
+    queryFn: () => officeService.getActive(),
+    staleTime: 5 * 60 * 1000,
+  })
 
   return (
     <div>
@@ -219,6 +228,113 @@ export default function HomePage() {
             </motion.div>
           ))}
         </motion.div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <motion.div {...fadeUp} className="flex items-center justify-between mb-10">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-primary flex items-center gap-3">
+              <Building2 className="w-6 h-6 text-accent" />
+              {locale === "ar" ? "مكاتب رائجة" : "Trending Offices"}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1.5">
+              {locale === "ar" ? "مكاتب التأجير الأعلى تقييماً" : "Top-rated rental offices"}
+            </p>
+          </div>
+          <Link href="/offices" className="group inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700 transition-colors">
+            {t("home.view_all")}
+            <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </motion.div>
+        {officesLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse overflow-hidden">
+                <div className="h-40 bg-muted" />
+                <div className="p-4 space-y-3">
+                  <div className="h-5 bg-muted rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded w-1/2" />
+                  <div className="flex gap-2">
+                    <div className="h-8 bg-muted rounded-lg w-16" />
+                    <div className="h-8 bg-muted rounded-lg w-16" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : trendingOffices.length > 0 ? (
+          <motion.div {...staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {trendingOffices.slice(0, 8).map((office, i) => (
+              <motion.div
+                key={office.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
+                whileHover={{ y: -6 }}
+              >
+                <Link href={`/offices/${office.id}`}>
+                  <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                    <div className="relative h-40 overflow-hidden">
+                      <img
+                        src={office.logo || "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400"}
+                        alt={office.office_name || (locale === "ar" ? "مكتب تأجير" : "Rental Office")}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                      {office.is_active && (
+                        <div className="absolute top-3 right-3">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                            <CheckCircle className="w-3 h-3" />
+                            {locale === "ar" ? "نشط" : "Active"}
+                          </span>
+                        </div>
+                      )}
+                      {office.verified && (
+                        <div className="absolute top-3 left-3">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                            <Award className="w-3 h-3" />
+                            {locale === "ar" ? "موثق" : "Verified"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-primary text-sm leading-snug line-clamp-1">
+                        {office.office_name || (locale === "ar" ? "مكتب غير مسمى" : "Unnamed Office")}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-lg">
+                          <MapPin className="w-3 h-3" />
+                          {office.city || office.country || "-"}
+                        </span>
+                        <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-lg">
+                          <Users className="w-3 h-3" />
+                          {office.cars_count || 0} {locale === "ar" ? "سيارة" : "cars"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mt-4">
+                        <div>
+                          <span className="text-lg font-bold text-secondary">{office.rating || 5.0}</span>
+                          <span className="text-[10px] text-muted-foreground mr-1">{locale === "ar" ? "من 5" : "of 5"}</span>
+                        </div>
+                        <Button size="sm" className="rounded-xl shadow-lg shadow-secondary/20">
+                          {locale === "ar" ? "عرض السيارات" : "View Cars"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <div className="text-center py-12">
+            <Building2 className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">{locale === "ar" ? "لا توجد مكاتب رائجة حالياً" : "No trending offices at the moment"}</p>
+          </div>
+        )}
       </section>
 
       <section className="bg-gradient-to-b from-muted to-background py-16 md:py-24">
