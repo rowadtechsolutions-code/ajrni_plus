@@ -32,9 +32,9 @@ export function Header() {
     <>
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-3 items-center h-16 lg:h-20">
+          <div className="flex items-center justify-between lg:grid lg:grid-cols-3 h-16 lg:h-20">
             {/* START - Logo */}
-            <Link href="/" className="flex items-center gap-2.5 shrink-0 justify-self-start">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary to-blue-700 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-secondary/20 transition-transform duration-300 hover:scale-105">
                 أ
               </div>
