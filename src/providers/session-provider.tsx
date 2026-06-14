@@ -12,25 +12,33 @@ function enrichProfile(session: any, profile: any) {
   }
 }
 
+function getProfileTable(role?: string) {
+  return role === "OFFICE" ? "Offices" : "Users"
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setSession, clearSession, setLoading } = useAuthStore()
   const { loadFavorites, clear } = useFavoriteStore()
   const supabase = getClient()
+
+  const fetchProfile = async (session: any) => {
+    const role = session?.user?.user_metadata?.role
+    const table = getProfileTable(role)
+    const { data: profile } = await supabase
+      .from(table)
+      .select("*")
+      .eq("id", session.user.id)
+      .single()
+    setSession(session, session.user, enrichProfile(session, profile))
+    loadFavorites(session.user.id)
+  }
 
   useEffect(() => {
     setLoading(true)
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        supabase
-          .from("Users")
-          .select("*")
-          .eq("id", session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            setSession(session, session.user, enrichProfile(session, profile))
-            loadFavorites(session.user.id)
-          })
+        fetchProfile(session)
       } else {
         clearSession()
         clear()
@@ -39,15 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        supabase
-          .from("Users")
-          .select("*")
-          .eq("id", session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            setSession(session, session.user, enrichProfile(session, profile))
-            loadFavorites(session.user.id)
-          })
+        fetchProfile(session)
       } else {
         clearSession()
         clear()

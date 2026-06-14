@@ -27,17 +27,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   officeId: null,
   officeStatus: null,
   loading: true,
-  setSession: (session, user, profile) =>
+  setSession: (session, user, profile) => {
+    const role = profile?.role || user?.user_metadata?.role || null
     set({
       isAuthenticated: !!session,
       session,
       user,
       profile: profile || null,
-      role: profile?.role || null,
-      officeId: profile?.officeId || null,
+      role,
+      officeId: profile?.officeId || (role === "OFFICE" ? profile?.id : null) || null,
       officeStatus: profile?.officeStatus || null,
       loading: false,
-    }),
+    })
+  },
   clearSession: () =>
     set({
       isAuthenticated: false,
@@ -50,10 +52,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       loading: false,
     }),
   setLoading: (loading) => set({ loading }),
-  updateProfile: (profile) => set((state) => ({
-    profile,
-    role: profile?.role || state.role,
-    officeId: profile?.officeId || state.officeId,
-    officeStatus: profile?.officeStatus || state.officeStatus,
-  })),
+  updateProfile: (profile) => set((state) => {
+    const role = profile?.role || state.role
+    return {
+      profile,
+      role,
+      officeId: profile?.officeId || (role === "OFFICE" ? profile?.id : null) || state.officeId,
+      officeStatus: profile?.officeStatus || state.officeStatus,
+    }
+  }),
 }))

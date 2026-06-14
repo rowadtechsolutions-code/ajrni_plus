@@ -54,16 +54,6 @@ export function useAuth() {
     if (authData?.session) {
       await supabase.auth.setSession(authData.session)
 
-      const { error: uErr } = await supabase.from("Users").insert({
-        id: authData.user!.id,
-        full_name: metaName,
-        email: data.email,
-        phone_number: data.phone || '',
-        country: data.country || null,
-        city: data.city || null,
-      })
-      if (uErr && uErr.code !== '23505') throw new Error(`Users insert: ${uErr.message}`)
-
       if (data.role === "OFFICE") {
         const { error: oErr } = await supabase.from("Offices").insert({
           id: authData.user!.id,
@@ -76,6 +66,16 @@ export function useAuth() {
           commercial_registration_number: data.commercialRegistrationNumber || "",
         })
         if (oErr) throw new Error(`Offices insert: ${oErr.message}`)
+      } else {
+        const { error: uErr } = await supabase.from("Users").insert({
+          id: authData.user!.id,
+          full_name: metaName,
+          email: data.email,
+          phone_number: data.phone || '',
+          country: data.country || null,
+          city: data.city || null,
+        })
+        if (uErr && uErr.code !== '23505') throw new Error(`Users insert: ${uErr.message}`)
       }
 
       await supabase.auth.signOut()
