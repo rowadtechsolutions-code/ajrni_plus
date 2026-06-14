@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { SlidersHorizontal, X, Search, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
@@ -20,6 +20,14 @@ const fuelTypes = ["GASOLINE", "DIESEL", "ELECTRIC", "HYBRID"]
 const transmissions = ["AUTOMATIC", "MANUAL"]
 
 export default function CarsPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8"><div className="h-96 bg-muted rounded-2xl animate-pulse" /></div>}>
+      <CarsPageContent />
+    </Suspense>
+  )
+}
+
+function CarsPageContent() {
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
   const [showFilters, setShowFilters] = useState(false)
