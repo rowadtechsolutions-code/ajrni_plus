@@ -83,7 +83,7 @@ export function formatDate(date: string | Date, locale = "ar") {
   }).format(new Date(date))
 }
 
-const WHATSAPP_BUSINESS_NUMBER = "96876972871"
+const WHATSAPP_BUSINESS_NUMBER = "96876791559"
 
 export function buildWhatsAppReservationMessage(car: {
   name: string

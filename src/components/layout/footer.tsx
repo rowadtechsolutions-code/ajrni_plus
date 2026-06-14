@@ -6,7 +6,7 @@ import { FaWhatsapp, FaInstagram, FaTiktok } from "react-icons/fa6"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 
-const WHATSAPP_NUMBER = "96876972871"
+const WHATSAPP_NUMBER = "96876791559"
 
 const socialLinks = [
   { icon: FaWhatsapp, href: `https://wa.me/${WHATSAPP_NUMBER}`, label: "WhatsApp", hoverClass: "hover:text-green-400 hover:border-green-500/30 hover:bg-green-500/10" },
@@ -86,13 +86,13 @@ export function Footer() {
             </h4>
             <div className="space-y-3">
               <a
-                href={`tel:+96876972871`}
+                href={`tel:+96876791559`}
                 className="flex items-center gap-3 text-sm text-white/50 hover:text-white transition-all duration-200 group"
               >
                 <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all">
                   <Phone className="w-4 h-4" />
                 </div>
-                <span dir="ltr">+968 76972871</span>
+                <span dir="ltr">+968 76791559</span>
               </a>
               <a
                 href={`https://wa.me/${WHATSAPP_NUMBER}`}

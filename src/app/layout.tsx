@@ -12,7 +12,7 @@ import { MobileNav } from "@/components/layout/mobile-nav"
 import { ContactModal } from "@/components/layout/contact-modal"
 import "./globals.css"
 
-const WHATSAPP_NUMBER = "96876972871"
+const WHATSAPP_NUMBER = "96876791559"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [showScrollTop, setShowScrollTop] = useState(false)

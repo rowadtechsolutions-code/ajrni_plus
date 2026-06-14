@@ -45,6 +45,8 @@ export const officeService = {
   async toggleActive(officeId: string, is_active: boolean) {
     const { data, error } = await supabase.from("Offices").update({ is_active }).eq("id", officeId).select().single()
     if (error) throw error
+    const { error: carsError } = await supabase.from("cars").update({ is_active }).eq("office_id", officeId)
+    if (carsError) console.error("[toggleActive] cars update error:", carsError)
     return data
   },
 

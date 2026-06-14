@@ -3,11 +3,11 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Send, MessageCircle, Phone, Mail, MapPin, Clock } from "lucide-react"
-import { Button } from "@heroui/react"
+import { Button } from "@/components/ui/button"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 
-const WHATSAPP_NUMBER = "96876972871"
+const WHATSAPP_NUMBER = "96876791559"
 
 export default function ContactPage() {
   const { locale } = useLocaleStore()
@@ -97,7 +97,7 @@ export default function ContactPage() {
                     className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary transition-all placeholder:text-gray-400 resize-none"
                   />
                 </div>
-                <Button type="submit" className="w-full h-12 rounded-2xl text-base bg-green-600 text-white hover:bg-green-700">
+                <Button type="submit" className="w-full h-12 rounded-2xl text-base">
                   <Send className="w-4 h-4" />
                   {t("contact.submit")}
                 </Button>
@@ -123,11 +123,11 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{t("contact.whatsapp")}</p>
-                    <p className="text-sm font-semibold text-primary group-hover:text-green-600 transition-colors" dir="ltr">+968 76972871</p>
+                    <p className="text-sm font-semibold text-primary group-hover:text-green-600 transition-colors" dir="ltr">+968 76791559</p>
                   </div>
                 </a>
                 <a
-                  href={`tel:+96876972871`}
+                  href={`tel:+96876791559`}
                   className="flex items-center gap-4 group"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-all">
@@ -135,7 +135,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{t("contact.phone_label")}</p>
-                    <p className="text-sm font-semibold text-primary group-hover:text-blue-600 transition-colors" dir="ltr">+968 76972871</p>
+                    <p className="text-sm font-semibold text-primary group-hover:text-blue-600 transition-colors" dir="ltr">+968 76791559</p>
                   </div>
                 </a>
                 <div className="flex items-center gap-4">

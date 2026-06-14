@@ -7,7 +7,7 @@ import { useLocaleStore } from "@/store/useLocaleStore"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-const WHATSAPP_NUMBER = "96876972871"
+const WHATSAPP_NUMBER = "96876791559"
 
 interface ContactModalProps {
   open: boolean

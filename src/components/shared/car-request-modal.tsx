@@ -11,7 +11,7 @@ import { brands } from "@/lib/brands"
 import { gulfCountries } from "@/lib/locations"
 import { getClient } from "@/lib/supabase/client"
 
-const WHATSAPP_NUMBER = "96876972871"
+const WHATSAPP_NUMBER = "96876791559"
 
 const carTypes = [
   { id: "sedan", labelAr: "سيدان", labelEn: "Sedan" },
