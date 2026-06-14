@@ -9,6 +9,7 @@ import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 import { officeService } from "@/lib/supabase/services"
 import { getCountryByCode } from "@/lib/locations"
+import { formatPhoneNumber } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { OfficeType } from "@/types"
@@ -118,7 +119,7 @@ export default function OfficesPage() {
                       <Link href={`/offices/${office.id}`} className="flex-1">
                         <Button size="sm" className="w-full">{t("offices_page.view_office")}</Button>
                       </Link>
-                      <a href={`https://wa.me/${office.phone_number?.replace(/\s/g, "")}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-all">
+                      <a href={`https://wa.me/${formatPhoneNumber(office.phone_number, office.country)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-all">
                         <MessageCircle className="w-4 h-4" />
                       </a>
                     </div>

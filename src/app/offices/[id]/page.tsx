@@ -8,6 +8,7 @@ import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 import { officeService, carService } from "@/lib/supabase/services"
 import { getCountryByCode } from "@/lib/locations"
+import { formatPhoneNumber } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CarCard } from "@/components/shared/car-card"
@@ -82,7 +83,7 @@ export default function OfficePage() {
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
               <a href={`tel:${o.phone_number}`} className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-medium text-gray-900 transition-all hover:bg-gray-50 active:scale-[0.98] flex-1 sm:flex-initial"><Phone className="w-4 h-4" /></a>
-              <a href={`https://wa.me/${o.phone_number?.replace(/[^0-9]/g, "")}`} target="_blank" className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-medium text-gray-900 transition-all hover:bg-gray-50 active:scale-[0.98] flex-1 sm:flex-initial text-success"><MessageCircle className="w-4 h-4" /></a>
+              <a href={`https://wa.me/${formatPhoneNumber(o.phone_number, o.country)}`} target="_blank" className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-medium text-gray-900 transition-all hover:bg-gray-50 active:scale-[0.98] flex-1 sm:flex-initial text-success"><MessageCircle className="w-4 h-4" /></a>
             </div>
           </div>
         </div>
