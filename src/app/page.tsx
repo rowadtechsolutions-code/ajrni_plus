@@ -14,6 +14,7 @@ import { formatCurrency, getCurrencyByCountry } from "@/lib/utils"
 import { getCountryByCode } from "@/lib/locations"
 import { Button } from "@/components/ui/button"
 import { ContactModal } from "@/components/layout/contact-modal"
+import { CarRequestModal } from "@/components/shared/car-request-modal"
 
 const popularSearches = [
   { city: "الرياض", cityEn: "Riyadh", country: "السعودية", countryEn: "KSA" },
@@ -67,9 +68,13 @@ export default function HomePage() {
   }, [loading, isAuthenticated, profile, router])
   const [searchQuery, setSearchQuery] = useState("")
   const [showContact, setShowContact] = useState(false)
+  const [showCarRequest, setShowCarRequest] = useState(false)
   
   const [userLocation, setUserLocation] = useState<{ country?: string; city?: string }>({})
   
+  const profileCountry = profile?.country || null
+  const profileCity = profile?.city || null
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedCountry = localStorage.getItem("userCountry")
@@ -79,20 +84,23 @@ export default function HomePage() {
     }
   }, [])
 
+  const effectiveCountry = profileCountry || userLocation.country || undefined
+  const effectiveCity = profileCity || userLocation.city || undefined
+
   const { data: trendingOffices = [], isLoading: officesLoading } = useQuery({
-    queryKey: ["trending-offices"],
+    queryKey: ["trending-offices", effectiveCountry],
     queryFn: () => officeService.getActive(),
     staleTime: 5 * 60 * 1000,
   })
 
   const { data: trendingCars = [], isLoading: carsLoading } = useQuery({
-    queryKey: ["trending-cars", userLocation.country, userLocation.city],
+    queryKey: ["trending-cars", effectiveCountry, effectiveCity],
     queryFn: () => carService.getAll({
-      country: userLocation.country || undefined,
-      city: userLocation.city || undefined,
+      country: effectiveCountry,
+      city: effectiveCity,
     }),
     staleTime: 5 * 60 * 1000,
-    enabled: !!(userLocation.country || userLocation.city),
+    enabled: !!(effectiveCountry || effectiveCity),
   })
 
   const heroRef = useRef(null)
@@ -183,6 +191,20 @@ export default function HomePage() {
                 ))}
               </div>
             </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="mt-6 text-center"
+            >
+              <button
+                onClick={() => setShowCarRequest(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-white/10 text-white hover:bg-white/20 rounded-2xl border border-white/20 hover:border-white/40 transition-all backdrop-blur-sm"
+              >
+                <MessageCircle className="w-4 h-4 text-green-400" />
+                {locale === "ar" ? "طلب سيارة مخصص" : "Custom car request"}
+              </button>
+            </motion.div>
           </motion.div>
         </motion.div>
       </section>
@@ -195,16 +217,16 @@ export default function HomePage() {
               {t("home.trending")}
             </h2>
             <p className="text-sm text-muted-foreground mt-1.5">
-              {userLocation.country
+              {effectiveCountry
                 ? locale === "ar"
-                  ? `سيارات رائجة في ${userLocation.city || userLocation.country}`
-                  : `Trending cars in ${userLocation.city || userLocation.country}`
+                  ? `سيارات رائجة في ${effectiveCity || (getCountryByCode(effectiveCountry) ? (locale === "ar" ? getCountryByCode(effectiveCountry)?.nameAr : getCountryByCode(effectiveCountry)?.nameEn) : effectiveCountry)}`
+                  : `Trending cars in ${effectiveCity || (getCountryByCode(effectiveCountry) ? getCountryByCode(effectiveCountry)?.nameEn : effectiveCountry)}`
                 : locale === "ar"
                   ? "اختر موقعك لرؤية السيارات الرائجة"
                   : "Select your location to see trending cars"}
             </p>
           </div>
-          <Link href="/cars" className="group inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700 transition-colors">
+          <Link href={`/cars${effectiveCountry ? `?country=${effectiveCountry}` : ""}`} className="group inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700 transition-colors">
             {t("home.view_all")}
             <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -299,7 +321,7 @@ export default function HomePage() {
           <div className="text-center py-12">
             <Car className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
             <p className="text-muted-foreground">
-              {userLocation.country
+              {effectiveCountry
                 ? locale === "ar"
                   ? "لا توجد سيارات رائجة في منطقتك حالياً"
                   : "No trending cars in your area yet"
@@ -307,7 +329,7 @@ export default function HomePage() {
                   ? "اختر دولتك ومدينتك لرؤية السيارات الرائجة"
                   : "Select your country and city to see trending cars"}
             </p>
-            {!userLocation.country && (
+            {!effectiveCountry && (
               <Link href="/cars" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700">
                 {locale === "ar" ? "تصفح السيارات" : "Browse cars"}
                 <ArrowLeft className="w-4 h-4" />
@@ -325,85 +347,113 @@ export default function HomePage() {
               {locale === "ar" ? "مكاتب رائجة" : "Trending Offices"}
             </h2>
             <p className="text-sm text-muted-foreground mt-1.5">
-              {locale === "ar" ? "مكاتب التأجير الأعلى تقييماً" : "Top-rated rental offices"}
+              {effectiveCountry
+                ? locale === "ar"
+                  ? `مكاتب في ${getCountryByCode(effectiveCountry) ? (locale === "ar" ? getCountryByCode(effectiveCountry)?.nameAr : getCountryByCode(effectiveCountry)?.nameEn) : effectiveCountry}`
+                  : `Offices in ${getCountryByCode(effectiveCountry) ? getCountryByCode(effectiveCountry)?.nameEn : effectiveCountry}`
+                : locale === "ar"
+                  ? "مكاتب التأجير الأعلى تقييماً"
+                  : "Top-rated rental offices"}
             </p>
           </div>
-          <Link href="/offices" className="group inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700 transition-colors">
+          <Link href={`/offices${effectiveCountry ? `?country=${effectiveCountry}` : ""}`} className="group inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700 transition-colors">
             {t("home.view_all")}
             <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </motion.div>
-        {officesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse overflow-hidden">
-                <div className="h-36 bg-muted" />
-                <div className="p-4 space-y-3">
-                  <div className="h-5 bg-muted rounded w-3/4" />
-                  <div className="h-4 bg-muted rounded w-1/2" />
-                  <div className="h-9 bg-muted rounded-xl w-full" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : trendingOffices.length > 0 ? (
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {trendingOffices.slice(0, 8).map((office, i) => (
-              <motion.div
-                key={office.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                whileHover={{ y: -4 }}
-              >
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
-                  <div className="relative h-36 overflow-hidden">
-                    <img src={officeImages[i % officeImages.length]} alt={office.office_name} className="w-full h-full object-cover" loading="lazy" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                    <div className="absolute bottom-3 right-3">
-                      {office.is_active && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                          <Shield className="w-3 h-3" />
-                          {t("offices_page.verified") || (locale === "ar" ? "موثق" : "Verified")}
-                        </span>
-                      )}
+        {(() => {
+          const allOffices = trendingOffices as any[]
+          const filteredOffices = allOffices
+            .filter((o: any) => !effectiveCountry || o.country === effectiveCountry)
+            .slice(0, 8)
+          const hasOffices = filteredOffices.length > 0
+          const isLoading = officesLoading
+          if (isLoading) {
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse overflow-hidden">
+                    <div className="h-36 bg-muted" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-5 bg-muted rounded w-3/4" />
+                      <div className="h-4 bg-muted rounded w-1/2" />
+                      <div className="h-9 bg-muted rounded-xl w-full" />
                     </div>
                   </div>
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-primary">{office.office_name}</h3>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                          <MapPin className="w-3 h-3" />
-                          {office.city}, {getCountryByCode(office.country) ? (locale === "ar" ? getCountryByCode(office.country)?.nameAr : getCountryByCode(office.country)?.nameEn) : office.country}
-                        </p>
+                ))}
+              </div>
+            )
+          }
+          if (hasOffices) {
+            return (
+              <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredOffices.map((office, i) => (
+                  <motion.div
+                    key={office.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    whileHover={{ y: -4 }}
+                  >
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                      <div className="relative h-36 overflow-hidden">
+                        <img src={officeImages[i % officeImages.length]} alt={office.office_name} className="w-full h-full object-cover" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                        <div className="absolute bottom-3 right-3">
+                          {office.is_active && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-secondary/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                              <Shield className="w-3 h-3" />
+                              {t("offices_page.verified") || (locale === "ar" ? "موثق" : "Verified")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-semibold text-primary">{office.office_name}</h3>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3" />
+                              {office.city}, {getCountryByCode(office.country) ? (locale === "ar" ? getCountryByCode(office.country)?.nameAr : getCountryByCode(office.country)?.nameEn) : office.country}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-lg">
+                            <MapPin className="w-3.5 h-3.5 text-secondary" />
+                            {office.city}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 pt-2">
+                          <Link href={`/offices/${office.id}`} className="flex-1">
+                            <Button size="sm" className="w-full">{t("offices_page.view_office") || (locale === "ar" ? "عرض المكتب" : "View Office")}</Button>
+                          </Link>
+                          <a href={`https://wa.me/${office.phone_number?.replace(/\s/g, "")}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-all">
+                            <MessageCircle className="w-4 h-4" />
+                          </a>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-lg">
-                        <MapPin className="w-3.5 h-3.5 text-secondary" />
-                        {office.city}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 pt-2">
-                      <Link href={`/offices/${office.id}`} className="flex-1">
-                        <Button size="sm" className="w-full">{t("offices_page.view_office") || (locale === "ar" ? "عرض المكتب" : "View Office")}</Button>
-                      </Link>
-                      <a href={`https://wa.me/${office.phone_number?.replace(/\s/g, "")}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-all">
-                        <MessageCircle className="w-4 h-4" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
+                  </motion.div>
+                ))}
               </motion.div>
-            ))}
-          </motion.div>
-        ) : (
-          <div className="text-center py-12">
-            <Building2 className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">{locale === "ar" ? "لا توجد مكاتب رائجة حالياً" : "No trending offices at the moment"}</p>
-          </div>
-        )}
+            )
+          }
+          return (
+            <div className="text-center py-12">
+              <Building2 className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">
+                {effectiveCountry
+                  ? locale === "ar"
+                    ? "لا توجد مكاتب رائجة في منطقتك حالياً"
+                    : "No trending offices in your area yet"
+                  : locale === "ar"
+                    ? "لا توجد مكاتب رائجة حالياً"
+                    : "No trending offices at the moment"}
+              </p>
+            </div>
+          )
+        })()}
       </section>
 
       <section className="bg-gradient-to-b from-muted to-background py-16 md:py-24">
@@ -503,6 +553,7 @@ export default function HomePage() {
       </section>
 
       <ContactModal open={showContact} onClose={() => setShowContact(false)} />
+      <CarRequestModal open={showCarRequest} onClose={() => setShowCarRequest(false)} />
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Phone, Mail, ArrowUp } from "lucide-react"
-import { FaWhatsapp, FaInstagram, FaFacebookF, FaXTwitter } from "react-icons/fa6"
+import { FaWhatsapp, FaInstagram, FaTiktok } from "react-icons/fa6"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 
@@ -10,9 +10,8 @@ const WHATSAPP_NUMBER = "96876972871"
 
 const socialLinks = [
   { icon: FaWhatsapp, href: `https://wa.me/${WHATSAPP_NUMBER}`, label: "WhatsApp", hoverClass: "hover:text-green-400 hover:border-green-500/30 hover:bg-green-500/10" },
-  { icon: FaInstagram, href: "https://www.instagram.com/ajrni", label: "Instagram", hoverClass: "hover:text-pink-400 hover:border-pink-500/30 hover:bg-pink-500/10" },
-  { icon: FaFacebookF, href: "https://www.facebook.com/ajrni", label: "Facebook", hoverClass: "hover:text-blue-400 hover:border-blue-500/30 hover:bg-blue-500/10" },
-  { icon: FaXTwitter, href: "https://x.com/ajrni", label: "X (Twitter)", hoverClass: "hover:text-white hover:border-white/30 hover:bg-white/10" },
+  { icon: FaInstagram, href: "https://www.instagram.com/ajrniplus/", label: "Instagram", hoverClass: "hover:text-pink-400 hover:border-pink-500/30 hover:bg-pink-500/10" },
+  { icon: FaTiktok, href: "https://www.tiktok.com/@ajrni.plus?lang=en", label: "TikTok", hoverClass: "hover:text-white hover:border-white/30 hover:bg-white/10" },
 ]
 
 const quickLinks = [
@@ -107,13 +106,13 @@ export function Footer() {
                 <span>{locale === "ar" ? "واتساب" : "WhatsApp"}</span>
               </a>
               <a
-                href="mailto:info@ajrni.com"
+                href="mailto:ajrniplus@gmail.com"
                 className="flex items-center gap-3 text-sm text-white/50 hover:text-white transition-all duration-200 group"
               >
                 <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all">
                   <Mail className="w-4 h-4" />
                 </div>
-                <span>info@ajrni.com</span>
+                <span>ajrniplus@gmail.com</span>
               </a>
             </div>
           </div>
@@ -124,11 +123,11 @@ export function Footer() {
             © {new Date().getFullYear()} Ajrni Plus | أجرني بلس. {locale === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-xs text-white/30 hover:text-white/60 transition-all">
+            <Link href="/privacy" className="text-xs text-white/30 hover:text-white/60 transition-all">
               {locale === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}
             </Link>
             <span className="text-white/10">|</span>
-            <Link href="/" className="text-xs text-white/30 hover:text-white/60 transition-all">
+            <Link href="/terms" className="text-xs text-white/30 hover:text-white/60 transition-all">
               {locale === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}
             </Link>
           </div>

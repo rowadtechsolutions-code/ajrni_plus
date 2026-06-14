@@ -15,6 +15,7 @@ interface AuthState {
   setSession: (session: any, user: User | null, profile?: any) => void
   clearSession: () => void
   setLoading: (loading: boolean) => void
+  updateProfile: (profile: any) => void
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -49,4 +50,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       loading: false,
     }),
   setLoading: (loading) => set({ loading }),
+  updateProfile: (profile) => set((state) => ({
+    profile,
+    role: profile?.role || state.role,
+    officeId: profile?.officeId || state.officeId,
+    officeStatus: profile?.officeStatus || state.officeStatus,
+  })),
 }))

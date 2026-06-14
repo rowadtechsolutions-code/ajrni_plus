@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
-import { Menu, X, User, LogOut, LayoutDashboard, Shield, Heart, Globe, Car, BarChart3 } from "lucide-react"
+import { Menu, X, User, LogOut, LayoutDashboard, Shield, Globe, Car, BarChart3 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -89,11 +89,6 @@ export function Header() {
                   <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse" />
                 ) : isAuthenticated ? (
                   <>
-                    {profile?.role === "CUSTOMER" && (
-                      <Link href="/wishlist" className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-gray-100 transition-all duration-200">
-                        <Heart className="w-4 h-4" />
-                      </Link>
-                    )}
                     {profile?.role === "OFFICE" && (
                       <Link href="/dashboard" className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-gray-100 transition-all duration-200">
                         <LayoutDashboard className="w-4 h-4" />
@@ -106,9 +101,17 @@ export function Header() {
                     )}
                     <Link
                       href="/profile"
-                      className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary to-blue-700 text-white flex items-center justify-center text-xs font-bold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
+                      className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
                     >
-                      {profile?.name?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary to-blue-700 text-white flex items-center justify-center text-xs font-bold shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 shrink-0">
+                        {profile?.full_name?.[0] || profile?.name?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
+                      </div>
+                      <div className="text-right leading-tight">
+                        <p className="text-sm font-medium text-primary group-hover:text-secondary transition-colors line-clamp-1">
+                          {profile?.full_name || profile?.name || user?.email?.split("@")[0] || "User"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-1">{user?.email}</p>
+                      </div>
                     </Link>
                   </>
                 ) : (

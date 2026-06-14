@@ -20,6 +20,8 @@ export interface OfficeType {
   country: string | null
   city: string | null
   is_active: boolean | null
+  bio: string | null
+  image: string | null
 }
 
 export interface CarType {

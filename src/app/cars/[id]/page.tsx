@@ -13,7 +13,6 @@ import { carService } from "@/lib/supabase/services"
 import { formatCurrency, cn, getCurrencyByCountry, openWhatsAppReservation } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CarCard } from "@/components/shared/car-card"
 import type { CarType } from "@/types"
 
 export default function CarDetailsPage() {
@@ -27,12 +26,6 @@ export default function CarDetailsPage() {
     queryKey: ["car", id],
     queryFn: () => carService.getById(id),
     enabled: !!id,
-  })
-
-  const { data: similarCars = [] } = useQuery({
-    queryKey: ["cars", "similar", car?.brand],
-    queryFn: () => carService.getAll({ brand: car?.brand ?? undefined }),
-    enabled: !!car?.brand,
   })
 
   const wishlisted = car ? isWishlisted(car.id) : false
@@ -64,7 +57,6 @@ export default function CarDetailsPage() {
 
   const c = car as CarType
   const office = c.office
-  const similar = (similarCars as CarType[]).filter((sc) => sc.id !== c.id).slice(0, 4)
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
@@ -75,7 +67,30 @@ export default function CarDetailsPage() {
             <img src={c.image || "/placeholder.svg"} alt={c.name} className="w-full h-full object-cover" />
             <div className="absolute top-3 left-3 flex gap-2">
               <button onClick={() => toggleItem(c.id)} className="p-2 rounded-full bg-white/80 hover:bg-white"><Heart className={cn("w-5 h-5", wishlisted ? "fill-error text-error" : "")} /></button>
-              <button className="p-2 rounded-full bg-white/80 hover:bg-white"><Share2 className="w-5 h-5" /></button>
+              <button
+                onClick={async () => {
+                  const url = window.location.href
+                  if (navigator.share) {
+                    try { await navigator.share({ title: c.name, url }) } catch {}
+                  } else {
+                    try {
+                      await navigator.clipboard.writeText(url)
+                      alert(locale === "ar" ? "تم نسخ الرابط" : "Link copied")
+                    } catch {
+                      const input = document.createElement("input")
+                      input.value = url
+                      document.body.appendChild(input)
+                      input.select()
+                      document.execCommand("copy")
+                      document.body.removeChild(input)
+                      alert(locale === "ar" ? "تم نسخ الرابط" : "Link copied")
+                    }
+                  }
+                }}
+                className="p-2 rounded-full bg-white/80 hover:bg-white"
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
             </div>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
@@ -114,21 +129,17 @@ export default function CarDetailsPage() {
               <p className="text-sm text-muted-foreground">{c.color}</p>
             </div>
           )}
-          {similar.length > 0 && (
-            <div>
-              <h2 className="font-semibold text-primary mb-4">{t("car_details.similar_cars")}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {similar.map((sc, i) => <CarCard key={sc.id} car={sc} index={i} />)}
-              </div>
-            </div>
-          )}
         </div>
         <div className="space-y-4">
           {office && (
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sticky top-20">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/20 to-blue-600/20 flex items-center justify-center text-lg font-bold text-secondary">
-                  {office.office_name?.[0] || "O"}
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/20 to-blue-600/20 flex items-center justify-center text-lg font-bold text-secondary shrink-0 overflow-hidden">
+                  {office.image ? (
+                    <img src={office.image} alt={office.office_name || ""} className="w-full h-full object-cover" />
+                  ) : (
+                    office.office_name?.[0] || "O"
+                  )}
                 </div>
                 <div>
                   <Link href={`/offices/${office.id}`} className="font-semibold text-primary hover:text-secondary">{office.office_name || (locale === "ar" ? "المكتب" : "Office")}</Link>
@@ -138,6 +149,7 @@ export default function CarDetailsPage() {
                   </div>
                 </div>
               </div>
+              {office.bio && <p className="text-xs text-muted-foreground leading-relaxed mb-4">{office.bio}</p>}
               <div className="space-y-2">
                 <a href={`tel:${office.phone_number}`} className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-6 py-3 text-sm font-medium hover:bg-gray-50 transition-all w-full">
                   <Phone className="w-4 h-4" />{t("car_details.call")}

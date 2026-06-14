@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { SlidersHorizontal, X, Search, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 import { carService } from "@/lib/supabase/services"
@@ -22,8 +24,14 @@ export default function CarsPage() {
   const { t } = useTranslation(locale)
   const [showFilters, setShowFilters] = useState(false)
   const [search, setSearch] = useState("")
+  const searchParams = useSearchParams()
   const [countryFilter, setCountryFilter] = useState("")
   const [cityFilter, setCityFilter] = useState("")
+
+  useEffect(() => {
+    const q = searchParams.get("q")
+    if (q) setSearch(q)
+  }, [searchParams])
 
   useEffect(() => {
     const saved = localStorage.getItem("userCountry")
@@ -50,7 +58,13 @@ export default function CarsPage() {
   })
 
   const filteredCars = (cars as CarType[]).filter((car) => {
-    if (search && !car.name.toLowerCase().includes(search.toLowerCase())) return false
+    if (search) {
+      const q = search.toLowerCase()
+      const nameMatch = car.name?.toLowerCase().includes(q)
+      const brandMatch = car.brand?.toLowerCase().includes(q)
+      const modelMatch = car.model?.toLowerCase().includes(q)
+      if (!nameMatch && !brandMatch && !modelMatch) return false
+    }
     return true
   }).sort((a, b) => {
     const aPrice = Number(a.price || 0)
@@ -211,10 +225,12 @@ export default function CarsPage() {
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                 <Search className="w-6 h-6 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground">{t("cars.no_results")}</p>
-              <Button variant="outline" className="mt-4 rounded-2xl" onClick={() => { setFilters({ brand: "", transmission: "", fuel_type: "", minPrice: "", maxPrice: "", seats: "" }); setSearch(""); setCountryFilter(""); setCityFilter("") }}>
-                {t("cars.reset_filters")}
-              </Button>
+              <p className="text-muted-foreground">{locale === "ar" ? "لم يتم العثور على سيارات مطابقة لبحثك" : "No cars matching your search were found"}</p>
+              <Link href="/cars">
+                <Button variant="outline" className="mt-4 rounded-2xl">
+                  {locale === "ar" ? "عرض جميع السيارات" : "View all cars"}
+                </Button>
+              </Link>
             </motion.div>
           )}
         </div>

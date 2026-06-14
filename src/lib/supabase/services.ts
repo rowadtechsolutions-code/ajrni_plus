@@ -72,6 +72,7 @@ export const storageService = {
 }
 
 const OFFICES_BUCKET = "Offices"
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]
 
 export const officeStorageService = {
   async uploadOfficeImage(file: File, path: string) {
@@ -85,6 +86,34 @@ export const officeStorageService = {
     const { error } = await supabase.storage.from(OFFICES_BUCKET).remove([path])
     if (error) throw new Error(error.message || JSON.stringify(error))
   },
+
+  async uploadProfileImage(userId: string, file: File, oldImageUrl?: string | null) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      throw new Error("Unsupported image format. Use jpg, png, or webp.")
+    }
+    const ext = file.name.split(".").pop() || "jpg"
+    const timestamp = Date.now()
+    const path = `offices/${userId}/profile-${timestamp}.${ext}`
+
+    if (oldImageUrl) {
+      const oldPath = extractStoragePath(oldImageUrl)
+      if (oldPath) {
+        await supabase.storage.from(OFFICES_BUCKET).remove([oldPath]).catch(() => {})
+      }
+    }
+
+    const { data, error } = await supabase.storage.from(OFFICES_BUCKET).upload(path, file, { upsert: true })
+    if (error) throw new Error(error.message || JSON.stringify(error))
+    const { data: urlData } = supabase.storage.from(OFFICES_BUCKET).getPublicUrl(data.path)
+    return urlData.publicUrl
+  },
+}
+
+function extractStoragePath(publicUrl: string): string | null {
+  const marker = `${OFFICES_BUCKET}/`
+  const idx = publicUrl.indexOf(marker)
+  if (idx === -1) return null
+  return publicUrl.slice(idx + marker.length)
 }
 
 export const carService = {
