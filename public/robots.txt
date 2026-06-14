@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ajrni.com/sitemap.xml
+Sitemap: https://www.ajrniplus.com/sitemap.xml

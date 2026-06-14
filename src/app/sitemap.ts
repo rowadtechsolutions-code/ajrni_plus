@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next"
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL || "https://ajrni.com"
+const BASE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ajrniplus.com"
 
 const staticRoutes = [
   "",
