@@ -14,6 +14,15 @@ export const countryCurrency: Record<string, { code: string; symbol: string; nam
   BH: { code: "BHD", symbol: "د.ب.", nameAr: "دينار بحريني" },
 }
 
+const countryDialCode: Record<string, string> = {
+  SA: "966",
+  AE: "971",
+  QA: "974",
+  KW: "965",
+  BH: "973",
+  OM: "968",
+}
+
 export function getCurrencyByCountry(country: string | null | undefined) {
   if (country && countryCurrency[country]) return countryCurrency[country]
   return { code: "SAR", symbol: "ر.س.", nameAr: "ريال سعودي" }
@@ -88,7 +97,7 @@ export function buildWhatsAppReservationMessage(car: {
   seats?: number | null
   color?: string | null
   plate_number?: string | null
-  office?: { office_name?: string | null; country?: string | null; city?: string | null } | null
+  office?: { office_name?: string | null; country?: string | null; city?: string | null; phone_number?: string | null } | null
 }, userPhone?: string) {
   const { amount, isMonthly } = formatCarPrice(car)
   const locale = "ar"
@@ -122,6 +131,15 @@ export function buildWhatsAppReservationMessage(car: {
   return encodeURIComponent(lines.join("\n"))
 }
 
+export function formatPhoneNumber(phone: string | null | undefined, country?: string | null): string {
+  if (!phone) return WHATSAPP_BUSINESS_NUMBER
+  const digits = phone.replace(/[^\d]/g, "").replace(/^00/, "")
+  if (digits.length >= 10) return digits
+  const dial = country ? countryDialCode[country] : null
+  if (dial) return dial + digits
+  return digits || WHATSAPP_BUSINESS_NUMBER
+}
+
 export function openWhatsAppReservation(car: {
   name: string
   brand?: string | null
@@ -134,9 +152,10 @@ export function openWhatsAppReservation(car: {
   seats?: number | null
   color?: string | null
   plate_number?: string | null
-  office?: { office_name?: string | null; country?: string | null; city?: string | null } | null
+  office?: { office_name?: string | null; country?: string | null; city?: string | null; phone_number?: string | null } | null
 }, userPhone?: string) {
   const message = buildWhatsAppReservationMessage(car, userPhone)
-  const url = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${message}`
+  const targetPhone = formatPhoneNumber(car?.office?.phone_number, car?.office?.country)
+  const url = `https://wa.me/${targetPhone}?text=${message}`
   window.open(url, "_blank")
 }
