@@ -28,9 +28,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         <title>أجرني بلس | Ajrni Plus</title>
+        <link rel="icon" type="image/png" href="/images/logo.png" />
+        <link rel="shortcut icon" href="/images/logo.png" />
+        <link rel="apple-touch-icon" href="/images/logo.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#2563eb" />
         <meta name="google-site-verification" content="8-6VslBVgCbKC0O5bwi90HijXc3XTGWkN1_mTssQpMw" />
+        <meta name="description" content="أجرني بلس — منصة تأجير السيارات في الخليج. احجز سيارة من مكاتب تأجير موثوقة في السعودية، الإمارات، عمان، قطر، الكويت، البحرين." />
+        <meta name="keywords" content="تأجير سيارات, استئجار سيارة, سيارات للإيجار, Ajrni Plus, أجرني بلس, تأجير سيارات الخليج, سيارة مع سائق, إيجار سيارة شهري" />
+        <meta property="og:title" content="أجرني بلس | Ajrni Plus" />
+        <meta property="og:description" content="منصة تأجير السيارات في الخليج — احجز سيارة من مكاتب تأجير موثوقة" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="أجرني بلس" />
       </head>
       <body className="min-h-screen bg-background antialiased">
         <QueryProvider>
