@@ -1,17 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
-import { Search, MapPin, Shield, Building2, MessageCircle } from "lucide-react"
+import { Search, MapPin, Shield, Building2, MessageCircle, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 import { officeService } from "@/lib/supabase/services"
-import { getCountryByCode } from "@/lib/locations"
-import { formatPhoneNumber } from "@/lib/utils"
+import { gulfCountries, getCountryByCode, getCitiesByCountryCode } from "@/lib/locations"
+import { formatPhoneNumber, cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import type { OfficeType } from "@/types"
 
 const officeImages = [
@@ -27,15 +26,32 @@ export default function OfficesPage() {
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
   const [search, setSearch] = useState("")
+  const [country, setCountry] = useState("")
+  const [city, setCity] = useState("")
 
   const { data: offices = [], isLoading } = useQuery({
     queryKey: ["offices"],
     queryFn: () => officeService.getActive(),
   })
 
-  const filtered = (offices as any[]).filter((office) => {
-    return office.office_name.toLowerCase().includes(search.toLowerCase())
-  })
+  const cities = useMemo(() => (country ? getCitiesByCountryCode(country) : []), [country])
+
+  const filtered = useMemo(() => {
+    return (offices as any[]).filter((office) => {
+      const matchSearch = office.office_name.toLowerCase().includes(search.toLowerCase())
+      const matchCountry = !country || office.country === country
+      const matchCity = !city || office.city === city
+      return matchSearch && matchCountry && matchCity
+    })
+  }, [offices, search, country, city])
+
+  const activeFilters = [search, country, city].filter(Boolean).length > 0
+
+  const clearFilters = () => {
+    setSearch("")
+    setCountry("")
+    setCity("")
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12">
@@ -48,15 +64,53 @@ export default function OfficesPage() {
           <h1 className="text-3xl md:text-4xl font-bold text-primary mb-3">{t("offices_page.title")}</h1>
           <p className="text-muted-foreground">{t("offices_page.subtitle")}</p>
         </div>
-        <div className="relative max-w-md mx-auto">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("offices_page.search_placeholder")}
-            className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all pr-10"
-          />
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 max-w-2xl mx-auto">
+          <div className="relative flex-1">
+            <Search className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground", locale === "ar" ? "right-3" : "left-3")} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("offices_page.search_placeholder")}
+              className={cn(
+                "w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-secondary focus:ring-2 focus:ring-secondary/20",
+                locale === "ar" ? "pr-10" : "pl-10"
+              )}
+            />
+          </div>
+          <select
+            value={country}
+            onChange={(e) => { setCountry(e.target.value); setCity("") }}
+            className="w-full sm:w-auto min-w-[140px] rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-no-repeat pr-10"
+            style={{ backgroundPosition: locale === "ar" ? "left 12px center" : "right 12px center" }}
+          >
+            <option value="">{locale === "ar" ? "كل الدول" : "All countries"}</option>
+            {gulfCountries.map((c) => (
+              <option key={c.code} value={c.code}>{locale === "ar" ? c.nameAr : c.nameEn}</option>
+            ))}
+          </select>
+          <select
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            disabled={!country}
+            className="w-full sm:w-auto min-w-[140px] rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-no-repeat pr-10"
+            style={{ backgroundPosition: locale === "ar" ? "left 12px center" : "right 12px center" }}
+          >
+            <option value="">{locale === "ar" ? "كل المدن" : "All cities"}</option>
+            {cities.map((c) => (
+              <option key={c.nameAr} value={c.nameAr}>{locale === "ar" ? c.nameAr : c.nameEn}</option>
+            ))}
+          </select>
+          {activeFilters && (
+            <button
+              onClick={clearFilters}
+              className="shrink-0 p-3 rounded-2xl border border-gray-200 hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
+              title={locale === "ar" ? "إلغاء التصفية" : "Clear filters"}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </motion.div>
 
@@ -73,7 +127,7 @@ export default function OfficesPage() {
             </div>
           ))}
         </div>
-      ) : (
+      ) : filtered.length > 0 ? (
         <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((office, i) => {
             const countryObj = office.country ? getCountryByCode(office.country) : null
@@ -86,7 +140,7 @@ export default function OfficesPage() {
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ y: -4 }}
               >
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col">
                   <div className="relative h-36 overflow-hidden">
                     <img src={officeImages[i % officeImages.length]} alt={office.office_name} className="w-full h-full object-cover" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -99,27 +153,32 @@ export default function OfficesPage() {
                       )}
                     </div>
                   </div>
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-primary">{office.office_name}</h3>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                          <MapPin className="w-3 h-3" />
-                          {office.city}, {countryName}
-                        </p>
+                  <div className="p-4 space-y-3 flex flex-col flex-1">
+                    <div>
+                      <h3 className="font-semibold text-primary">{office.office_name}</h3>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3 shrink-0" />
+                        {[office.city, countryName].filter(Boolean).join(", ")}
+                      </p>
+                    </div>
+                    {office.city && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-lg">
+                          <MapPin className="w-3.5 h-3.5 text-secondary" />
+                          {office.city}
+                        </span>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-lg">
-                        <MapPin className="w-3.5 h-3.5 text-secondary" />
-                        {office.city}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 pt-2">
+                    )}
+                    <div className="flex items-center gap-2 pt-2 mt-auto">
                       <Link href={`/offices/${office.id}`} className="flex-1">
                         <Button size="sm" className="w-full">{t("offices_page.view_office")}</Button>
                       </Link>
-                      <a href={`https://wa.me/${formatPhoneNumber(office.phone_number, office.country)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-all">
+                      <a
+                        href={`https://wa.me/${formatPhoneNumber(office.phone_number, office.country)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-all"
+                      >
                         <MessageCircle className="w-4 h-4" />
                       </a>
                     </div>
@@ -129,9 +188,7 @@ export default function OfficesPage() {
             )
           })}
         </motion.div>
-      )}
-
-      {!isLoading && filtered.length === 0 && (
+      ) : (
         <div className="text-center py-20">
           <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground">{t("offices_page.no_results")}</p>
