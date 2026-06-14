@@ -103,7 +103,7 @@ export function buildWhatsAppReservationMessage(car: {
   const { amount, isMonthly } = formatCarPrice(car)
   const locale = "ar"
   const lines: string[] = []
-  const carUrl = car.id ? `${process.env.NEXT_PUBLIC_SITE_URL || "https://ajrni.com"}/cars/${car.id}` : null
+  const carUrl = car.id ? `https://ajrni.com/cars/${car.id}` : null
   if (carUrl) lines.push(`🔗 ${locale === "ar" ? "رابط السيارة" : "Car link"}: ${carUrl}`)
   lines.push(`🚗 ${locale === "ar" ? "حجز سيارة" : "Car Reservation"}`)
   lines.push(``)
