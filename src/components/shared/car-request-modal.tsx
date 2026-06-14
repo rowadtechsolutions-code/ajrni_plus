@@ -105,7 +105,8 @@ export function CarRequestModal({ open, onClose }: CarRequestModalProps) {
     if (phones.length === 0) phones.push(WHATSAPP_NUMBER)
     const encoded = encodeURIComponent(message)
     phones.forEach((phone, i) => {
-      setTimeout(() => window.open(`https://wa.me/${phone.replace(/^\+/, "")}?text=${encoded}`, "_blank"), i * 500)
+      const clean = phone.replace(/[^\d]/g, "").replace(/^00/, "")
+      setTimeout(() => window.open(`https://wa.me/${clean}?text=${encoded}`, "_blank"), i * 500)
     })
 
     setSending(false)
