@@ -86,6 +86,7 @@ export function formatDate(date: string | Date, locale = "ar") {
 const WHATSAPP_BUSINESS_NUMBER = "96876791559"
 
 export function buildWhatsAppReservationMessage(car: {
+  id?: string | null
   name: string
   brand?: string | null
   model?: string | null
@@ -102,6 +103,8 @@ export function buildWhatsAppReservationMessage(car: {
   const { amount, isMonthly } = formatCarPrice(car)
   const locale = "ar"
   const lines: string[] = []
+  const carUrl = car.id ? `${process.env.NEXT_PUBLIC_SITE_URL || "https://ajrni.com"}/cars/${car.id}` : null
+  if (carUrl) lines.push(`🔗 ${locale === "ar" ? "رابط السيارة" : "Car link"}: ${carUrl}`)
   lines.push(`🚗 ${locale === "ar" ? "حجز سيارة" : "Car Reservation"}`)
   lines.push(``)
   lines.push(`📋 ${locale === "ar" ? "السيارة" : "Car"}: ${car.name}`)
@@ -141,6 +144,7 @@ export function formatPhoneNumber(phone: string | null | undefined, country?: st
 }
 
 export function openWhatsAppReservation(car: {
+  id?: string | null
   name: string
   brand?: string | null
   model?: string | null
