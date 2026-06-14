@@ -194,6 +194,44 @@ export const carService = {
   },
 }
 
+export const favoriteService = {
+  async toggle(userId: string, carId: string) {
+    const existing = await supabase
+      .from("Favorites")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("car_id", carId)
+      .maybeSingle()
+
+    if (existing.data) {
+      await supabase.from("Favorites").delete().eq("id", existing.data.id)
+      return false
+    } else {
+      await supabase.from("Favorites").insert({ user_id: userId, car_id: carId })
+      return true
+    }
+  },
+
+  async getByUser(userId: string) {
+    const { data, error } = await supabase
+      .from("Favorites")
+      .select("*, car:cars(*)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+    if (error) throw error
+    return (data || []) as any[]
+  },
+
+  async getIds(userId: string) {
+    const { data, error } = await supabase
+      .from("Favorites")
+      .select("car_id")
+      .eq("user_id", userId)
+    if (error) throw error
+    return (data || []).map((f: any) => f.car_id) as string[]
+  },
+}
+
 export const bookingService = {
   async getByOffice(officeId: string) {
     const { data, error } = await supabase

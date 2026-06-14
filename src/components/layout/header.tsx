@@ -100,7 +100,7 @@ export function Header() {
                       </Link>
                     )}
                     <Link
-                      href="/profile"
+                      href={profile?.role === "OFFICE" ? "/dashboard/profile" : "/profile"}
                       className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
                     >
                       <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary to-blue-700 text-white flex items-center justify-center text-xs font-bold shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 shrink-0">

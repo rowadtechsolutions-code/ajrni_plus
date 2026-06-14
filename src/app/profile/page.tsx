@@ -127,7 +127,7 @@ export default function ProfilePage() {
   const navItems = [
     ...(profile?.role === "OFFICE" ? [{ icon: Shield, label: t("nav.dashboard"), href: "/dashboard" }] : []),
     ...(profile?.role === "ADMIN" ? [{ icon: Shield, label: t("nav.admin"), href: "/admin" }] : []),
-    { icon: Heart, label: t("nav.wishlist"), href: "/wishlist" },
+    ...(profile?.role !== "OFFICE" ? [{ icon: Heart, label: t("nav.wishlist"), href: "/favorites" }] : []),
   ]
 
   return (

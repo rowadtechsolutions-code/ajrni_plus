@@ -76,27 +76,66 @@ export function formatDate(date: string | Date, locale = "ar") {
 
 const WHATSAPP_BUSINESS_NUMBER = "96876972871"
 
-export function buildWhatsAppReservationMessage(car: { name: string; brand?: string | null; model?: string | null; year?: string | number | null; price?: string | null; rental_type?: string | null; office?: { country?: string | null } | null }, userPhone?: string) {
-  const { amount, isMonthly, currency } = formatCarPrice(car)
-  const locale = userPhone ? "ar" : "ar"
-  const carInfo = `${car.name} (${car.brand || ""} ${car.model || ""} ${car.year || ""})`.trim()
-  const priceInfo = `${amount} ${isMonthly ? (locale === "ar" ? "/شهر" : "/month") : (locale === "ar" ? "/يوم" : "/day")}`
-
-  let message = `🚗 ${locale === "ar" ? "حجز سيارة" : "Car Reservation"}\n\n`
-  message += `📋 ${locale === "ar" ? "السيارة" : "Car"}: ${carInfo}\n`
-  message += `💰 ${locale === "ar" ? "السعر" : "Price"}: ${priceInfo}\n\n`
-  message += `${locale === "ar" ? "أرغب في حجز هذه السيارة. يرجى التواصل معي." : "I would like to reserve this car. Please contact me."}`
-
-  if (userPhone) {
-    message += `\n📞 ${locale === "ar" ? "رقم الجوال" : "Phone"}: ${userPhone}`
-  } else {
-    message += `\n📞 ${locale === "ar" ? "رقم الجوال" : "Phone"}: [يرجى إدخال رقمك]`
+export function buildWhatsAppReservationMessage(car: {
+  name: string
+  brand?: string | null
+  model?: string | null
+  year?: string | number | null
+  price?: string | null
+  rental_type?: string | null
+  transmission?: string | null
+  fuel_type?: string | null
+  seats?: number | null
+  color?: string | null
+  plate_number?: string | null
+  office?: { office_name?: string | null; country?: string | null; city?: string | null } | null
+}, userPhone?: string) {
+  const { amount, isMonthly } = formatCarPrice(car)
+  const locale = "ar"
+  const lines: string[] = []
+  lines.push(`🚗 ${locale === "ar" ? "حجز سيارة" : "Car Reservation"}`)
+  lines.push(``)
+  lines.push(`📋 ${locale === "ar" ? "السيارة" : "Car"}: ${car.name}`)
+  if (car.brand) lines.push(`🏭 ${locale === "ar" ? "الماركة" : "Brand"}: ${car.brand}`)
+  if (car.model) lines.push(`📦 ${locale === "ar" ? "الموديل" : "Model"}: ${car.model}`)
+  if (car.year) lines.push(`📅 ${locale === "ar" ? "السنة" : "Year"}: ${car.year}`)
+  if (car.transmission) lines.push(`⚙️ ${locale === "ar" ? "القير" : "Transmission"}: ${car.transmission === "AUTOMATIC" ? "أوتوماتيك" : car.transmission === "MANUAL" ? "يدوي" : car.transmission}`)
+  if (car.fuel_type) {
+    const fuelMap: Record<string, string> = { GASOLINE: "بنزين", DIESEL: "ديزل", ELECTRIC: "كهرباء", HYBRID: "هايبرد" }
+    lines.push(`⛽ ${locale === "ar" ? "الوقود" : "Fuel"}: ${fuelMap[car.fuel_type] || car.fuel_type}`)
   }
-
-  return encodeURIComponent(message)
+  if (car.seats) lines.push(`👥 ${locale === "ar" ? "المقاعد" : "Seats"}: ${car.seats}`)
+  if (car.color) lines.push(`🎨 ${locale === "ar" ? "اللون" : "Color"}: ${car.color}`)
+  if (car.plate_number) lines.push(`🔢 ${locale === "ar" ? "رقم اللوحة" : "Plate"}: ${car.plate_number}`)
+  lines.push(`💰 ${locale === "ar" ? "السعر" : "Price"}: ${amount} ${isMonthly ? (locale === "ar" ? "/شهر" : "/month") : (locale === "ar" ? "/يوم" : "/day")}`)
+  if (car.office?.office_name || car.office?.city || car.office?.country) {
+    const loc = [car.office.city, car.office.country].filter(Boolean).join("، ")
+    lines.push(`🏢 ${locale === "ar" ? "المكتب" : "Office"}: ${car.office.office_name || ""} ${loc ? `(${loc})` : ""}`)
+  }
+  lines.push(``)
+  lines.push(locale === "ar" ? "أرغب في حجز هذه السيارة. يرجى التواصل معي." : "I would like to reserve this car. Please contact me.")
+  if (userPhone) {
+    lines.push(`📞 ${locale === "ar" ? "رقم الجوال" : "Phone"}: ${userPhone}`)
+  } else {
+    lines.push(`📞 ${locale === "ar" ? "رقم الجوال" : "Phone"}: [يرجى إدخال رقمك]`)
+  }
+  return encodeURIComponent(lines.join("\n"))
 }
 
-export function openWhatsAppReservation(car: { name: string; brand?: string | null; model?: string | null; year?: string | number | null; price?: string | null; rental_type?: string | null; office?: { country?: string | null } | null }, userPhone?: string) {
+export function openWhatsAppReservation(car: {
+  name: string
+  brand?: string | null
+  model?: string | null
+  year?: string | number | null
+  price?: string | null
+  rental_type?: string | null
+  transmission?: string | null
+  fuel_type?: string | null
+  seats?: number | null
+  color?: string | null
+  plate_number?: string | null
+  office?: { office_name?: string | null; country?: string | null; city?: string | null } | null
+}, userPhone?: string) {
   const message = buildWhatsAppReservationMessage(car, userPhone)
   const url = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${message}`
   window.open(url, "_blank")

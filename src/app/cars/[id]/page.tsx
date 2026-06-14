@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Heart, Share2, Phone, MessageCircle, MapPin, Users, Gauge, Fuel, Calendar, ArrowLeft } from "lucide-react"
 import { motion } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
-import { useWishlistStore } from "@/store/useWishlistStore"
+import { useFavoriteStore } from "@/store/useFavoriteStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
 import { carService } from "@/lib/supabase/services"
@@ -19,8 +19,8 @@ export default function CarDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
-  const { isWishlisted, toggleItem } = useWishlistStore()
-  const { profile } = useAuthStore()
+  const { isFavorited, toggleFavorite } = useFavoriteStore()
+  const { profile, user } = useAuthStore()
 
   const { data: car, isLoading } = useQuery({
     queryKey: ["car", id],
@@ -28,7 +28,7 @@ export default function CarDetailsPage() {
     enabled: !!id,
   })
 
-  const wishlisted = car ? isWishlisted(car.id) : false
+  const wishlisted = car ? isFavorited(car.id) : false
 
   if (isLoading) {
     return (
@@ -66,7 +66,7 @@ export default function CarDetailsPage() {
           <div className="relative rounded-2xl overflow-hidden bg-muted h-[300px] md:h-[400px]">
             <img src={c.image || "/placeholder.svg"} alt={c.name} className="w-full h-full object-cover" />
             <div className="absolute top-3 left-3 flex gap-2">
-              <button onClick={() => toggleItem(c.id)} className="p-2 rounded-full bg-white/80 hover:bg-white"><Heart className={cn("w-5 h-5", wishlisted ? "fill-error text-error" : "")} /></button>
+              <button onClick={() => { if (user?.id) toggleFavorite(user.id, c.id) }} className="p-2 rounded-full bg-white/80 hover:bg-white"><Heart className={cn("w-5 h-5", wishlisted ? "fill-error text-error" : "")} /></button>
               <button
                 onClick={async () => {
                   const url = window.location.href

@@ -77,3 +77,11 @@ export interface CarFilters {
   country?: string
   city?: string
 }
+
+export interface FavoriteType {
+  id: string
+  created_at: string
+  user_id: string
+  car_id: string
+  car: CarType | null
+}

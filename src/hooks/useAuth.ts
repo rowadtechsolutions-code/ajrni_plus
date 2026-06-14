@@ -4,6 +4,7 @@ import { useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { getClient } from "@/lib/supabase/client"
 import { useAuthStore } from "@/store/useAuthStore"
+import { useFavoriteStore } from "@/store/useFavoriteStore"
 
 const supabase = getClient()
 
@@ -82,6 +83,7 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
     store.clearSession()
+    useFavoriteStore.getState().clear()
     router.push("/")
     router.refresh()
   }, [router, store])

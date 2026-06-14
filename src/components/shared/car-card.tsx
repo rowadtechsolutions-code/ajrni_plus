@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Heart, Users, Gauge, Star, MapPin, MessageCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
-import { useWishlistStore } from "@/store/useWishlistStore"
+import { useFavoriteStore } from "@/store/useFavoriteStore"
 import { useTranslation } from "@/lib/i18n"
 import { useAuthStore } from "@/store/useAuthStore"
 import { cn, formatCurrency, getCurrencyByCountry, openWhatsAppReservation } from "@/lib/utils"
@@ -18,9 +18,15 @@ interface CarCardProps {
 export function CarCard({ car, index = 0 }: CarCardProps) {
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
-  const { isWishlisted, toggleItem } = useWishlistStore()
-  const { profile } = useAuthStore()
-  const wishlisted = isWishlisted(car.id)
+  const { isFavorited, toggleFavorite } = useFavoriteStore()
+  const { profile, user } = useAuthStore()
+  const wishlisted = isFavorited(car.id)
+
+  const handleToggleFav = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (user?.id) toggleFavorite(user.id, car.id)
+  }
 
   const handleReserve = () => {
     const userPhone = profile?.phone_number || ""
@@ -53,7 +59,7 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
               )}
             </div>
             <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleItem(car.id) }}
+              onClick={handleToggleFav}
               className="absolute top-3 left-3 p-2.5 rounded-2xl bg-white/80 backdrop-blur-sm hover:bg-white shadow-lg transition-all hover:scale-110 active:scale-95"
             >
               <Heart className={cn("w-4 h-4 transition-colors", wishlisted ? "fill-error text-error" : "text-muted-foreground")} />

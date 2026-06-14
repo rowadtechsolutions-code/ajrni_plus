@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MessageCircle, Loader2, Send, MapPin } from "lucide-react"
+import { MessageCircle, Loader2, Send } from "lucide-react"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,6 +9,7 @@ import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { brands } from "@/lib/brands"
 import { gulfCountries } from "@/lib/locations"
+import { getClient } from "@/lib/supabase/client"
 
 const WHATSAPP_NUMBER = "96876972871"
 
@@ -60,9 +61,10 @@ export function CarRequestModal({ open, onClose }: CarRequestModalProps) {
     e.preventDefault()
     setSending(true)
 
+    const country = gulfCountries.find(c => c.code === form.pickupCountry)
     const pickupLocation = form.pickupCity
-      ? `${form.pickupCity}${form.pickupCountry ? `, ${gulfCountries.find(c => c.code === form.pickupCountry) ? (locale === "ar" ? gulfCountries.find(c => c.code === form.pickupCountry)?.nameAr : gulfCountries.find(c => c.code === form.pickupCountry)?.nameEn) : form.pickupCountry}` : ""}`
-      : form.pickupCountry || "غير محدد"
+      ? `${form.pickupCity}${country ? `, ${locale === "ar" ? country.nameAr : country.nameEn}` : ""}`
+      : form.pickupCountry || (locale === "ar" ? "غير محدد" : "Not specified")
 
     const carTypeLabel = carTypes.find((t) => t.id === form.carType)
     const brandLabel = brands.find((b) => b.id === form.brand)
@@ -93,8 +95,19 @@ export function CarRequestModal({ open, onClose }: CarRequestModalProps) {
         `${form.notes ? `\n📝 Notes: ${form.notes}` : ""}\n` +
         `\nPlease contact me to confirm the request.`
 
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
-    window.open(url, "_blank")
+    const supabase = getClient()
+    let query = supabase.from("Offices").select("phone_number").eq("is_active", true)
+    if (form.pickupCountry) query = query.eq("country", form.pickupCountry)
+    if (form.pickupCity) query = query.eq("city", form.pickupCity)
+    const { data: offices } = await query
+
+    const phones = offices?.map((o: any) => o.phone_number).filter(Boolean) as string[]
+    if (phones.length === 0) phones.push(WHATSAPP_NUMBER)
+    const encoded = encodeURIComponent(message)
+    phones.forEach((phone, i) => {
+      setTimeout(() => window.open(`https://wa.me/${phone.replace(/^\+/, "")}?text=${encoded}`, "_blank"), i * 500)
+    })
+
     setSending(false)
     onClose()
   }

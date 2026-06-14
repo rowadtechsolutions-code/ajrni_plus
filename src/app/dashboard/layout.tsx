@@ -1,11 +1,13 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Car, TrendingUp, User } from "lucide-react"
+import { Car, TrendingUp, User, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
+import { useAuth } from "@/hooks/useAuth"
 
 const navItems = [
   { href: "/dashboard/cars", icon: Car, label: "dashboard.my_cars" },
@@ -17,6 +19,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
   const pathname = usePathname()
+  const { signOut } = useAuth()
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   return (
     <div className="flex min-h-[80vh]">
@@ -33,6 +37,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )
           })}
         </nav>
+        <button onClick={() => setShowLogoutModal(true)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-error hover:bg-red-50 transition-all w-full mt-4">
+          <LogOut className="w-4 h-4" />
+          {locale === "ar" ? "تسجيل الخروج" : "Logout"}
+        </button>
       </aside>
       <div className="flex-1 min-w-0">
         <div className="lg:hidden flex items-center gap-2 p-4 border-b border-border bg-white overflow-x-auto no-scrollbar">
@@ -45,9 +53,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
             )
           })}
+          <button onClick={() => setShowLogoutModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap text-error bg-muted hover:bg-red-50 transition-all">
+            <LogOut className="w-3.5 h-3.5" />
+            {locale === "ar" ? "تسجيل الخروج" : "Logout"}
+          </button>
         </div>
         {children}
       </div>
+
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowLogoutModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-80 mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-primary mb-2">{locale === "ar" ? "تسجيل الخروج" : "Logout"}</h3>
+            <p className="text-sm text-muted-foreground mb-6">{locale === "ar" ? "هل أنت متأكد أنك تريد تسجيل الخروج؟" : "Are you sure you want to logout?"}</p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowLogoutModal(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-muted-foreground hover:bg-muted transition-all">
+                {locale === "ar" ? "إلغاء" : "Cancel"}
+              </button>
+              <button onClick={() => { signOut(); setShowLogoutModal(false) }} className="flex-1 px-4 py-2.5 rounded-xl bg-error text-white text-sm font-medium hover:bg-red-700 transition-all">
+                {locale === "ar" ? "تسجيل الخروج" : "Logout"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
