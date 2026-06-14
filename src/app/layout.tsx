@@ -30,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <title>أجرني بلس | Ajrni Plus</title>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#2563eb" />
+        <meta name="google-site-verification" content="8-6VslBVgCbKC0O5bwi90HijXc3XTGWkN1_mTssQpMw" />
       </head>
       <body className="min-h-screen bg-background antialiased">
         <QueryProvider>
