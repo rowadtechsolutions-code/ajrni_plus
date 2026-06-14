@@ -31,6 +31,7 @@ export function useAuth() {
     phone?: string
     role: string
     officeName?: string
+    commercialRegistrationNumber?: string
     country?: string
     city?: string
   }) => {
@@ -72,6 +73,7 @@ export function useAuth() {
           country: data.country || "",
           city: data.city || "",
           is_active: false,
+          commercial_registration_number: data.commercialRegistrationNumber || "",
         })
         if (oErr) throw new Error(`Offices insert: ${oErr.message}`)
       }

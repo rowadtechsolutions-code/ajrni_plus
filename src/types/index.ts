@@ -22,6 +22,7 @@ export interface OfficeType {
   is_active: boolean | null
   bio: string | null
   image: string | null
+  commercial_registration_number: string | null
 }
 
 export interface CarType {

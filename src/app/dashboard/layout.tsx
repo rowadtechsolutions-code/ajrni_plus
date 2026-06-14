@@ -4,10 +4,12 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Car, TrendingUp, User, LogOut } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 import { useAuth } from "@/hooks/useAuth"
+import { officeService } from "@/lib/supabase/services"
 
 const navItems = [
   { href: "/dashboard/cars", icon: Car, label: "dashboard.my_cars" },
@@ -19,13 +21,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
   const pathname = usePathname()
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+
+  const { data: office } = useQuery({
+    queryKey: ["office-status", user?.id],
+    queryFn: () => officeService.getByUserId(user!.id),
+    enabled: !!user?.id,
+  })
+  const isActive = office?.is_active
 
   return (
     <div className="flex min-h-[80vh]">
-      <aside className="hidden lg:block w-64 border-l border-border bg-white p-4">
-        <h2 className="font-bold text-primary mb-4 px-3">{t("dashboard.title")}</h2>
+        <aside className="hidden lg:block w-64 border-l border-border bg-white p-4">
+        <div className="flex items-center justify-between px-3 mb-4">
+          <h2 className="font-bold text-primary">{t("dashboard.title")}</h2>
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isActive ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+            {isActive ? (locale === "ar" ? "نشط" : "Active") : (locale === "ar" ? "قيد المراجعة" : "Pending")}
+          </span>
+        </div>
         <nav className="space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href
@@ -44,6 +58,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
       <div className="flex-1 min-w-0">
         <div className="lg:hidden flex items-center gap-2 p-4 border-b border-border bg-white overflow-x-auto no-scrollbar">
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${isActive ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+            {isActive ? (locale === "ar" ? "نشط" : "Active") : (locale === "ar" ? "قيد المراجعة" : "Pending")}
+          </span>
           {navItems.map((item) => {
             const isActive = pathname === item.href
             return (

@@ -27,6 +27,7 @@ export default function DashboardProfilePage() {
     city: "",
     bio: "",
   })
+  const [crNumber, setCrNumber] = useState("")
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
@@ -50,6 +51,7 @@ export default function DashboardProfilePage() {
         city: office.city || "",
         bio: office.bio || "",
       })
+      setCrNumber(office.commercial_registration_number || "")
       setExistingImage(office.image || null)
     }
   }, [office])
@@ -323,6 +325,15 @@ export default function DashboardProfilePage() {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-primary">
+              {locale === "ar" ? "رقم السجل التجاري" : "Commercial Registration No."}
+            </label>
+            <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-muted-foreground cursor-not-allowed">
+              {crNumber || "-"}
             </div>
           </div>
 

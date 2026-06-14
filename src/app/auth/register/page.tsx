@@ -24,6 +24,8 @@ export default function RegisterPage() {
   const { signUp } = useAuth()
   const [role, setRole] = useState<"CUSTOMER" | "OFFICE">("CUSTOMER")
   const [error, setError] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [confirmError, setConfirmError] = useState("")
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -35,6 +37,10 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormData) => {
     setError("")
+    setConfirmError("")
+    if (data.password !== confirmPassword) {
+      setConfirmError(locale === "ar" ? "كلمة المرور غير متطابقة" : "Passwords do not match"); return
+    }
     if (role === "CUSTOMER" && !data.name) {
       setError(locale === "ar" ? "يرجى إدخال الاسم" : "Please enter your name"); return
     }
@@ -42,6 +48,7 @@ export default function RegisterPage() {
       if (!data.country) { setError(locale === "ar" ? "يرجى اختيار الدولة" : "Please select a country"); return }
       if (!data.city) { setError(locale === "ar" ? "يرجى اختيار المدينة" : "Please select a city"); return }
       if (!data.officeName) { setError(locale === "ar" ? "يرجى إدخال اسم المكتب" : "Please enter office name"); return }
+      if (!data.commercialRegistrationNumber) { setError(locale === "ar" ? "يرجى إدخال رقم السجل التجاري" : "Please enter commercial registration number"); return }
     }
     try {
       await signUp({ ...data, role })
@@ -72,11 +79,20 @@ export default function RegisterPage() {
             {role === "CUSTOMER" ? (
               <Input id="name" label={t("auth.name")} placeholder={locale === "ar" ? "الاسم الكامل" : "Full name"} error={errors.name?.message} {...register("name")} />
             ) : (
-              <Input id="officeName" label={locale === "ar" ? "اسم المكتب" : "Office name"} placeholder={locale === "ar" ? "اسم المكتب" : "Office name"} {...register("officeName")} />
+              <>
+                <Input id="officeName" label={locale === "ar" ? "اسم المكتب" : "Office name"} placeholder={locale === "ar" ? "اسم المكتب" : "Office name"} {...register("officeName")} />
+                <Input
+                  id="commercialRegistrationNumber"
+                  label={locale === "ar" ? "رقم السجل التجاري" : "Commercial Registration No."}
+                  placeholder={locale === "ar" ? "رقم السجل التجاري" : "CR number"}
+                  {...register("commercialRegistrationNumber")}
+                />
+              </>
             )}
             <Input id="email" label={t("auth.email")} type="email" placeholder="email@example.com" error={errors.email?.message} {...register("email")} />
             <Input id="phone" label={t("auth.phone")} type="tel" placeholder="+966 5X XXX XXXX" error={errors.phone?.message} {...register("phone")} />
             <Input id="password" label={t("auth.password")} type="password" placeholder="••••••••" error={errors.password?.message} {...register("password")} />
+            <Input id="confirmPassword" label={locale === "ar" ? "تأكيد كلمة المرور" : "Confirm password"} type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); setConfirmError("") }} error={confirmError} />
             {role === "OFFICE" && (
               <>
                 <p className="text-xs text-warning bg-warning/5 p-3 rounded-xl">{t("auth.office_approval_note")}</p>

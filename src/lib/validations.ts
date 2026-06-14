@@ -12,6 +12,7 @@ export const registerSchema = z.object({
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
   role: z.enum(["CUSTOMER", "OFFICE"]),
   officeName: z.string().optional(),
+  commercialRegistrationNumber: z.string().optional(),
   country: z.string().optional(),
   city: z.string().optional(),
 })
