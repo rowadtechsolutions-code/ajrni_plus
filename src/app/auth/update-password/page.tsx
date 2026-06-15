@@ -9,6 +9,58 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Lock, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
 
+const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SUPA_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const STORAGE_KEY = `sb-${new URL(SUPA_URL).hostname.split(".")[0]}-auth-token`
+
+function getCodeVerifierFromCookie(): string | null {
+  const raw = document.cookie.split(";").map((c) => c.trim())
+  const prefix = `${STORAGE_KEY}-code-verifier`
+  const entries: { idx: number; val: string }[] = []
+
+  for (const cookie of raw) {
+    const eq = cookie.indexOf("=")
+    if (eq === -1) continue
+    const name = cookie.slice(0, eq)
+    const val = cookie.slice(eq + 1)
+    if (name === prefix) entries.push({ idx: -1, val })
+    else if (name.startsWith(prefix + ".")) {
+      const idx = parseInt(name.slice(name.lastIndexOf(".") + 1), 10)
+      if (!isNaN(idx)) entries.push({ idx, val })
+    }
+  }
+
+  if (!entries.length) return null
+  entries.sort((a, b) => a.idx - b.idx)
+  const combined = entries.map((e) => e.val).join("")
+  if (!combined) return null
+
+  if (combined.startsWith("base64-")) {
+    try {
+      const b64 = combined.slice(7).replace(/-/g, "+").replace(/_/g, "/")
+      const pad = b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), "=")
+      return atob(pad).split("/")[0] || null
+    } catch {
+      return null
+    }
+  }
+  return combined.split("/")[0] || null
+}
+
+async function exchangePKCEDirect(code: string, verifier: string) {
+  try {
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=pkce`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: SUPA_ANON },
+      body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
 export default function UpdatePasswordPage() {
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
@@ -35,11 +87,28 @@ export default function UpdatePasswordPage() {
       const code = params.get("code")
 
       if (code) {
-        const { data: exchanged, error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error && exchanged?.session) {
+        const { data: exchanged, error: excErr } = await supabase.auth.exchangeCodeForSession(code)
+        if (!excErr && exchanged?.session) {
           window.history.replaceState(null, "", window.location.pathname)
           setReady(true)
           return
+        }
+
+        const codeVerifier = getCodeVerifierFromCookie()
+        if (codeVerifier) {
+          const result = await exchangePKCEDirect(code, codeVerifier)
+          if (result?.access_token && result?.refresh_token) {
+            await supabase.auth.setSession({
+              access_token: result.access_token,
+              refresh_token: result.refresh_token,
+            })
+            const { data } = await supabase.auth.getSession()
+            if (data?.session) {
+              setReady(true)
+              window.history.replaceState(null, "", window.location.pathname)
+              return
+            }
+          }
         }
       }
 
