@@ -118,8 +118,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/5 mt-12 pt-8 pb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-white/30">
+        <div className="border-t border-white/5 mt-12 pt-8 pb-24 sm:pb-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-white/30 text-center sm:text-left">
             © {new Date().getFullYear()} Ajrni Plus | أجرني بلس. {locale === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
           </p>
           <div className="flex items-center gap-4">
