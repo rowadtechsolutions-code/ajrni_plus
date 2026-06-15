@@ -51,9 +51,11 @@ export function useAuth() {
     })
     if (error) throw error
 
-    if (authData?.session) {
-      await supabase.auth.setSession(authData.session)
+    if (authData?.user && !authData?.session) {
+      return
+    }
 
+    if (authData?.session) {
       if (data.role === "OFFICE") {
         const { error: oErr } = await supabase.from("Offices").insert({
           id: authData.user!.id,
@@ -90,5 +92,12 @@ export function useAuth() {
     router.refresh()
   }, [router, store])
 
-  return { ...store, signIn, signUp, signOut }
+  const resetPassword = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/update-password`,
+    })
+    if (error) throw error
+  }, [])
+
+  return { ...store, signIn, signUp, signOut, resetPassword }
 }

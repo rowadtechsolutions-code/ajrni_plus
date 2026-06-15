@@ -205,7 +205,14 @@
     "country": "Country",
     "city": "City",
     "register_as_office": "Register as Rental Office",
-    "office_approval_note": "Your request will be reviewed by admin before activation"
+    "office_approval_note": "Your request will be reviewed by admin before activation",
+    "forgot_password": "Forgot password?",
+    "reset_password_title": "Reset Password",
+    "reset_password_desc": "Enter your email and we'll send you a reset link",
+    "reset_password_sent": "Check your email for the password reset link",
+    "send_reset_link": "Send Reset Link",
+    "reset_password_error": "No account found with this email",
+    "go_back": "Back to login"
   },
   "common": {
     "loading": "Loading...",
