@@ -102,11 +102,15 @@ export function CarRequestModal({ open, onClose }: CarRequestModalProps) {
     const { data: offices } = await query
 
     const phones = offices?.map((o: any) => o.phone_number).filter(Boolean) as string[]
-    if (phones.length === 0) phones.push(WHATSAPP_NUMBER)
+    if (phones.length === 0) {
+      phones.push(WHATSAPP_NUMBER)
+    }
     const encoded = encodeURIComponent(message)
-    phones.forEach((phone, i) => {
-      const clean = phone.replace(/[^\d]/g, "").replace(/^00/, "")
-      setTimeout(() => window.open(`https://wa.me/${clean}?text=${encoded}`, "_blank"), i * 500)
+    const clean = phones[0].replace(/[^\d]/g, "").replace(/^00/, "")
+    window.open(`https://wa.me/${clean}?text=${encoded}`, "_blank")
+    phones.slice(1).forEach((phone, i) => {
+      const c = phone.replace(/[^\d]/g, "").replace(/^00/, "")
+      setTimeout(() => window.open(`https://wa.me/${c}?text=${encoded}`, "_blank"), (i + 1) * 500)
     })
 
     setSending(false)
