@@ -10,11 +10,41 @@ export const registerSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صحيح"),
   phone: z.string().min(7, "رقم الهاتف غير صحيح"),
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
+  confirmPassword: z.string().optional(),
   role: z.enum(["CUSTOMER", "OFFICE"]),
   officeName: z.string().optional(),
   commercialRegistrationNumber: z.string().optional(),
   country: z.string().optional(),
   city: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.password !== data.confirmPassword) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "كلمة المرور غير متطابقة", path: ["confirmPassword"] })
+  }
+  if (data.role === "CUSTOMER") {
+    if (!data.name?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "الاسم مطلوب", path: ["name"] })
+    }
+    if (!data.country) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "الدولة مطلوبة", path: ["country"] })
+    }
+    if (data.country && !data.city) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "المدينة مطلوبة", path: ["city"] })
+    }
+  }
+  if (data.role === "OFFICE") {
+    if (!data.officeName?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "اسم المكتب مطلوب", path: ["officeName"] })
+    }
+    if (!data.commercialRegistrationNumber?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "رقم السجل التجاري مطلوب", path: ["commercialRegistrationNumber"] })
+    }
+    if (!data.country) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "الدولة مطلوبة", path: ["country"] })
+    }
+    if (!data.city) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "المدينة مطلوبة", path: ["city"] })
+    }
+  }
 })
 
 export const officeRegisterSchema = z.object({
