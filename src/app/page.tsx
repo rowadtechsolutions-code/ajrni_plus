@@ -13,6 +13,7 @@ import { officeService, carService } from "@/lib/supabase/services"
 import { formatCurrency, getCurrencyByCountry } from "@/lib/utils"
 import { getCountryByCode } from "@/lib/locations"
 import { Button } from "@/components/ui/button"
+import { Modal } from "@/components/ui/modal"
 import { ContactModal } from "@/components/layout/contact-modal"
 import { CarRequestModal } from "@/components/shared/car-request-modal"
 
@@ -69,6 +70,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showContact, setShowContact] = useState(false)
   const [showCarRequest, setShowCarRequest] = useState(false)
+  const [showComingSoon, setShowComingSoon] = useState(false)
   
   const [userLocation, setUserLocation] = useState<{ country?: string; city?: string }>({})
   
@@ -198,7 +200,7 @@ export default function HomePage() {
               className="mt-6 text-center"
             >
               <button
-                onClick={() => setShowCarRequest(true)}
+                onClick={() => setShowComingSoon(true)}
                 className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-white/10 text-white hover:bg-white/20 rounded-2xl border border-white/20 hover:border-white/40 transition-all backdrop-blur-sm"
               >
                 <MessageCircle className="w-4 h-4 text-green-400" />
@@ -554,6 +556,20 @@ export default function HomePage() {
 
       <ContactModal open={showContact} onClose={() => setShowContact(false)} />
       <CarRequestModal open={showCarRequest} onClose={() => setShowCarRequest(false)} />
+
+      <Modal open={showComingSoon} onClose={() => setShowComingSoon(false)}>
+        <div className="text-center py-6">
+          <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MessageCircle className="w-8 h-8 text-accent" />
+          </div>
+          <h3 className="text-xl font-bold text-primary mb-2">
+            {locale === "ar" ? "قريباً" : "Coming soon"}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {locale === "ar" ? "خدمة طلب سيارة مخصصة ستكون متاحة قريباً" : "Custom car request service will be available soon"}
+          </p>
+        </div>
+      </Modal>
     </div>
   )
 }

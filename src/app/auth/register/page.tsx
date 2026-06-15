@@ -77,7 +77,25 @@ export default function RegisterPage() {
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {role === "CUSTOMER" ? (
-              <Input id="name" label={t("auth.name")} placeholder={locale === "ar" ? "الاسم الكامل" : "Full name"} error={errors.name?.message} {...register("name")} />
+              <>
+                <Input id="name" label={t("auth.name")} placeholder={locale === "ar" ? "الاسم الكامل" : "Full name"} error={errors.name?.message} {...register("name")} />
+                <Select
+                  id="country"
+                  label={t("auth.country")}
+                  error={errors.country?.message}
+                  options={gulfCountries.map((c) => ({ value: c.code, label: locale === "ar" ? c.nameAr : c.nameEn }))}
+                  {...register("country", { onChange: () => setValue("city", "") })}
+                />
+                {selectedCountry && (
+                  <Select
+                    id="city"
+                    label={t("auth.city")}
+                    error={errors.city?.message}
+                    options={cities.map((c) => ({ value: c.nameAr, label: locale === "ar" ? c.nameAr : c.nameEn }))}
+                    {...register("city")}
+                  />
+                )}
+              </>
             ) : (
               <>
                 <Input id="officeName" label={locale === "ar" ? "اسم المكتب" : "Office name"} placeholder={locale === "ar" ? "اسم المكتب" : "Office name"} {...register("officeName")} />
