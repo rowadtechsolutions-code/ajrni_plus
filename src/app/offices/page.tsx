@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { Search, MapPin, Shield, Building2, MessageCircle, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { useLocaleStore } from "@/store/useLocaleStore"
+import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
 import { officeService } from "@/lib/supabase/services"
 import { gulfCountries, getCountryByCode, getCitiesByCountryCode } from "@/lib/locations"
@@ -25,9 +26,19 @@ const officeImages = [
 export default function OfficesPage() {
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
+  const { profile } = useAuthStore()
   const [search, setSearch] = useState("")
   const [country, setCountry] = useState("")
   const [city, setCity] = useState("")
+
+  useEffect(() => {
+    if (profile?.country) {
+      setCountry(profile.country)
+      if (profile.city) setCity(profile.city)
+    } else {
+      setCountry("OM")
+    }
+  }, [profile])
 
   const { data: offices = [], isLoading } = useQuery({
     queryKey: ["offices"],

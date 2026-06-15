@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useLocaleStore } from "@/store/useLocaleStore"
+import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
 import { carService } from "@/lib/supabase/services"
 import { Button } from "@/components/ui/button"
@@ -36,15 +37,22 @@ function CarsPageContent() {
   const [countryFilter, setCountryFilter] = useState("")
   const [cityFilter, setCityFilter] = useState("")
 
+  const { profile } = useAuthStore()
+
   useEffect(() => {
     const q = searchParams.get("q")
     if (q) setSearch(q)
   }, [searchParams])
 
   useEffect(() => {
-    const saved = localStorage.getItem("userCountry")
-    if (saved) setCountryFilter(saved)
-  }, [])
+    if (profile?.country) {
+      setCountryFilter(profile.country)
+      if (profile.city) setCityFilter(profile.city)
+    } else {
+      const saved = localStorage.getItem("userCountry")
+      setCountryFilter(saved || "OM")
+    }
+  }, [profile])
   const [filters, setFilters] = useState({ brand: "", transmission: "", fuel_type: "", minPrice: "", maxPrice: "", seats: "" })
   const [sortBy, setSortBy] = useState("newest")
 
