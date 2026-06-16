@@ -118,19 +118,24 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/5 mt-12 pt-8 pb-24 sm:pb-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-white/30 text-center sm:text-left">
-            © {new Date().getFullYear()} Ajrni Plus | أجرني بلس. {locale === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
-          </p>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-xs text-white/30 hover:text-white/60 transition-all">
-              {locale === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}
-            </Link>
-            <span className="text-white/10">|</span>
-            <Link href="/terms" className="text-xs text-white/30 hover:text-white/60 transition-all">
-              {locale === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}
-            </Link>
+        <div className="border-t border-white/5 mt-12 pt-8 pb-24 sm:pb-8">
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-white/30 text-center sm:text-left">
+              © {new Date().getFullYear()} Ajrni Plus | أجرني بلس. {locale === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}
+            </p>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="text-xs text-white/30 hover:text-white/60 transition-all">
+                {locale === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}
+              </Link>
+              <span className="text-white/10">|</span>
+              <Link href="/terms" className="text-xs text-white/30 hover:text-white/60 transition-all">
+                {locale === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}
+              </Link>
+            </div>
           </div>
+          <p className="text-xs text-white/20 text-center mt-4">
+            أجرني بلس منصة تقنية مملوكة ومدارة بواسطة رواد للحلول التقنية
+          </p>
         </div>
       </div>
     </footer>
