@@ -10,6 +10,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { ContactModal } from "@/components/layout/contact-modal"
+import { InstallPrompt } from "@/components/layout/install-prompt"
 import "./globals.css"
 
 const WHATSAPP_NUMBER = "96876791559"
@@ -85,6 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 )}
               </AnimatePresence>
             </LocaleProvider>
+            <InstallPrompt />
           </AuthProvider>
         </QueryProvider>
       </body>
