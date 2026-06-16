@@ -134,7 +134,9 @@ export function Footer() {
             </div>
           </div>
           <p className="text-xs text-white/20 text-center mt-4">
-            أجرني بلس منصة تقنية مملوكة ومدارة بواسطة رواد للحلول التقنية
+            {locale === "ar"
+              ? "أجرني بلس منصة تقنية مملوكة ومدارة بواسطة رواد للحلول التقنية"
+              : "Ajrni Plus platform was created and is managed by Rowad Information Technology."}
           </p>
         </div>
       </div>
