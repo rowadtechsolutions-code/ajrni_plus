@@ -45,7 +45,7 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
         <div className="relative h-full bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-gray-200 transition-all duration-300 overflow-hidden group">
           <div className="relative h-48 overflow-hidden">
             <img
-              src={car.image || "/placeholder.svg"}
+              src={car.images?.length ? car.images[0] : car.image || "/placeholder.svg"}
               alt={car.name}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
               loading="lazy"

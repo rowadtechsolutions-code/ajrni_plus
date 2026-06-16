@@ -71,6 +71,13 @@ export const storageService = {
     const { error } = await supabase.storage.from(BUCKET).remove([path])
     if (error) throw new Error(error.message || JSON.stringify(error))
   },
+
+  async deleteCarImageByUrl(publicUrl: string) {
+    const path = extractStoragePath(publicUrl, BUCKET)
+    if (!path) return
+    const { error } = await supabase.storage.from(BUCKET).remove([path])
+    if (error) console.error("[deleteCarImageByUrl] error:", error)
+  },
 }
 
 const OFFICES_BUCKET = "Offices"
@@ -111,8 +118,8 @@ export const officeStorageService = {
   },
 }
 
-function extractStoragePath(publicUrl: string): string | null {
-  const marker = `${OFFICES_BUCKET}/`
+function extractStoragePath(publicUrl: string, bucket: string = OFFICES_BUCKET): string | null {
+  const marker = `${bucket}/`
   const idx = publicUrl.indexOf(marker)
   if (idx === -1) return null
   return publicUrl.slice(idx + marker.length)

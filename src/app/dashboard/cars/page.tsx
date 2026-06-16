@@ -81,7 +81,7 @@ export default function DashboardCarsPage() {
                   <tr key={car.id} className="border-b border-border hover:bg-muted/50">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        {car.image && <img src={car.image} alt="" className="w-10 h-10 rounded-xl object-cover" />}
+                        {car.images?.length ? <img src={car.images[0]} alt="" className="w-10 h-10 rounded-xl object-cover" /> : car.image && <img src={car.image} alt="" className="w-10 h-10 rounded-xl object-cover" />}
                         <div>
                           <p className="font-medium">{car.name}</p>
                           <p className="text-xs text-muted-foreground">{car.brand} {car.year}</p>
@@ -96,7 +96,7 @@ export default function DashboardCarsPage() {
                         {car.status === "available" ? (locale === "ar" ? "متاح" : "Available") : car.status === "rented" ? (locale === "ar" ? "مستأجر" : "Rented") : (locale === "ar" ? "صيانة" : "Maintenance")}
                       </Badge>
                     </td>
-                    <td className="p-3 text-muted-foreground text-xs">{car.image ? (locale === "ar" ? "موجودة" : "Has image") : "-"}</td>
+                    <td className="p-3 text-muted-foreground text-xs">{car.images?.length ? `${car.images.length} ${locale === "ar" ? "صور" : "images"}` : car.image ? "1" : "-"}</td>
                     <td className="p-3">
                       <div className="flex items-center gap-1">
                         <button onClick={() => openEdit(car)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><Pencil className="w-4 h-4" /></button>

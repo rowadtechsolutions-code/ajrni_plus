@@ -44,6 +44,7 @@ export interface CarType {
   owner_id: string
   office_id: string | null
   image: string | null
+  images: string[]
   office: OfficeType | null
 }
 

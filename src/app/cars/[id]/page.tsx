@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
@@ -28,6 +29,7 @@ export default function CarDetailsPage() {
     enabled: !!id,
   })
 
+  const [selectedImage, setSelectedImage] = useState(0)
   const wishlisted = car ? isFavorited(car.id) : false
 
   if (isLoading) {
@@ -57,6 +59,7 @@ export default function CarDetailsPage() {
 
   const c = car as CarType
   const office = c.office
+  const carImages = c.images?.length ? c.images : c.image ? [c.image] : ["/placeholder.svg"]
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
@@ -64,7 +67,7 @@ export default function CarDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="relative rounded-2xl overflow-hidden bg-muted h-[300px] md:h-[400px]">
-            <img src={c.image || "/placeholder.svg"} alt={c.name} className="w-full h-full object-cover" />
+            <img src={carImages[selectedImage]} alt={c.name} className="w-full h-full object-cover" />
             <div className="absolute top-3 left-3 flex gap-2">
               <button onClick={() => { if (user?.id) toggleFavorite(user.id, c.id) }} className="p-2 rounded-full bg-white/80 hover:bg-white"><Heart className={cn("w-5 h-5", wishlisted ? "fill-error text-error" : "")} /></button>
               <button
@@ -93,6 +96,15 @@ export default function CarDetailsPage() {
               </button>
             </div>
           </div>
+          {carImages.length > 1 && (
+            <div className="flex gap-2">
+              {carImages.map((img, i) => (
+                <button key={i} onClick={() => setSelectedImage(i)} className={`relative w-24 h-16 rounded-xl overflow-hidden border-2 transition-all ${selectedImage === i ? "border-secondary ring-2 ring-secondary/30" : "border-gray-200 opacity-70 hover:opacity-100"}`}>
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <h1 className="text-2xl font-bold text-primary">{c.name}</h1>
             <div className="flex items-center gap-2 mt-2">

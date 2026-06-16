@@ -31,10 +31,10 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
   const [step, setStep] = useState(0)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageFiles, setImageFiles] = useState<(File | null)[]>([null, null, null])
+  const [imagePreviews, setImagePreviews] = useState<(string | null)[]>([null, null, null])
   const [uploading, setUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null])
 
   const step1 = useForm<CarStep1Data>({ resolver: zodResolver(carStep1Schema), defaultValues: { name: editingCar?.name || "", brand: editingCar?.brand || "", model: editingCar?.model || "" } })
   const step2 = useForm<CarStep2Data>({ resolver: zodResolver(carStep2Schema), defaultValues: { year: editingCar?.year?.toString() || "", color: editingCar?.color || "", transmission: editingCar?.transmission || "", fuel_type: editingCar?.fuel_type || "", seats: editingCar?.seats?.toString() || "", plate_number: editingCar?.plate_number || "" } })
@@ -45,8 +45,10 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
       step1.reset({ name: editingCar.name, brand: editingCar.brand || "", model: editingCar.model || "" })
       step2.reset({ year: editingCar.year?.toString() || "", color: editingCar.color || "", transmission: editingCar.transmission || "", fuel_type: editingCar.fuel_type || "", seats: editingCar.seats?.toString() || "", plate_number: editingCar.plate_number || "" })
       step3.reset({ rental_type: editingCar.rental_type as any || "daily", price: editingCar.price?.toString() || "", status: editingCar.status as any })
-      if (editingCar.image) {
-        setImagePreview(editingCar.image)
+      if (editingCar?.images?.length) {
+        setImagePreviews([editingCar.images[0] || null, editingCar.images[1] || null, editingCar.images[2] || null])
+      } else if (editingCar?.image) {
+        setImagePreviews([editingCar.image, null, null])
       }
     }
   }, [editingCar])
@@ -60,20 +62,33 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
       const s3 = step3.getValues()
       const ownerId = user!.id
 
-      let imageUrl: string | null = editingCar?.image || null
-      if (imageFile) {
-        const ext = imageFile.name.split(".").pop()
-        const path = `${ownerId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-        try {
-          imageUrl = await storageService.uploadCarImage(imageFile, path)
-          setImagePreview(null)
-          setImageFile(null)
-        } catch (e: any) {
-          throw new Error(e?.message || "فشل رفع الصورة")
+      const oldImageUrls: string[] = editingCar?.images?.filter(Boolean) || []
+      if (!oldImageUrls.length && editingCar?.image) oldImageUrls.push(editingCar.image)
+
+      const imageUrls: string[] = []
+      for (let i = 0; i < 3; i++) {
+        const file = imageFiles[i]
+        if (file) {
+          const ext = file.name.split(".").pop()
+          const path = `${ownerId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+          try {
+            const url = await storageService.uploadCarImage(file, path)
+            imageUrls.push(url)
+          } catch (e: any) {
+            throw new Error(e?.message || "فشل رفع الصورة")
+          }
+        } else if (imagePreviews[i]) {
+          imageUrls.push(imagePreviews[i]!)
         }
       }
 
-      const price = s3.price
+      for (const oldUrl of oldImageUrls) {
+        if (!imageUrls.includes(oldUrl)) {
+          await storageService.deleteCarImageByUrl(oldUrl)
+        }
+      }
+      setImagePreviews([null, null, null])
+      setImageFiles([null, null, null])
 
       const payload: Record<string, any> = {
         name: s1.name,
@@ -86,10 +101,11 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
         seats: Number(s2.seats),
         plate_number: s2.plate_number || null,
         rental_type: s3.rental_type,
-        price: price,
+        price: s3.price,
         status: s3.status,
         is_active: true,
-        image: imageUrl,
+        image: imageUrls[0] || null,
+        images: imageUrls,
       }
 
       if (editingCar) {
@@ -124,17 +140,25 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
 
   const prev = () => setStep((s) => Math.max(s - 1, 0))
 
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImage = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
+    const newFiles = [...imageFiles]
+    const newPreviews = [...imagePreviews]
+    newFiles[index] = file
+    newPreviews[index] = URL.createObjectURL(file)
+    setImageFiles(newFiles)
+    setImagePreviews(newPreviews)
   }
 
-  const removeImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
+  const removeImage = (index: number) => {
+    const newFiles = [...imageFiles]
+    const newPreviews = [...imagePreviews]
+    newFiles[index] = null
+    newPreviews[index] = null
+    setImageFiles(newFiles)
+    setImagePreviews(newPreviews)
+    if (fileInputRefs.current[index]) fileInputRefs.current[index]!.value = ""
   }
 
   const selectedBrand = step1.watch("brand")
@@ -286,19 +310,26 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
       {step === 3 && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-primary mb-1.5">{locale === "ar" ? "صورة السيارة" : "Car Image"}</label>
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full flex flex-col items-center gap-2 p-8 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 text-muted-foreground hover:border-secondary hover:bg-secondary/5 transition-all cursor-pointer">
-              <Upload className="w-8 h-8" />
-              <span className="text-sm font-medium">{locale === "ar" ? "اختر صورة" : "Choose image"}</span>
-              <span className="text-xs">{locale === "ar" ? "PNG, JPG" : "PNG, JPG"}</span>
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
-            {imagePreview && (
-              <div className="relative mt-3 aspect-video rounded-xl overflow-hidden border border-gray-200 group">
-                <img src={imagePreview} alt="" className="w-full h-full object-cover" />
-                <button type="button" onClick={removeImage} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><X className="w-4 h-4 text-white" /></button>
-              </div>
-            )}
+            <label className="block text-sm font-medium text-primary mb-1.5">{locale === "ar" ? "صور السيارة" : "Car Images"}</label>
+            <div className="grid grid-cols-3 gap-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i}>
+                  {imagePreviews[i] ? (
+                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-gray-200 group">
+                      <img src={imagePreviews[i]!} alt="" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => removeImage(i)} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><X className="w-3.5 h-3.5 text-white" /></button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => fileInputRefs.current[i]?.click()} className="w-full aspect-video flex flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 text-muted-foreground hover:border-secondary hover:bg-secondary/5 transition-all cursor-pointer">
+                      <Upload className="w-5 h-5" />
+                      <span className="text-[10px] font-medium">{locale === "ar" ? "صورة" : "Image"} {i + 1}</span>
+                    </button>
+                  )}
+                  <input ref={(el) => { fileInputRefs.current[i] = el }} type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(i, e)} />
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">{locale === "ar" ? "الحد الأقصى 3 صور" : "Max 3 images"}</p>
           </div>
         </div>
       )}
