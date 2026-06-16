@@ -3,30 +3,66 @@
 import { useState, useEffect } from "react"
 import { useLocaleStore } from "@/store/useLocaleStore"
 
+function isSafari() {
+  const ua = navigator.userAgent
+  return /Safari/.test(ua) && !/Chrome|CriOS/.test(ua)
+}
+
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+}
+
+function isMobile() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [show, setShow] = useState(false)
   const { locale } = useLocaleStore()
 
   useEffect(() => {
+    const dismissed = localStorage.getItem("install-dismissed")
+    if (dismissed) return
+
     const handler = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e)
       setShow(true)
     }
     window.addEventListener("beforeinstallprompt", handler)
-    return () => window.removeEventListener("beforeinstallprompt", handler)
+
+    const timer = setTimeout(() => {
+      if (!deferredPrompt && isMobile()) {
+        setShow(true)
+      }
+    }, 5000)
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler)
+      clearTimeout(timer)
+    }
   }, [])
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return
+    if (!deferredPrompt) {
+      handleDismiss()
+      return
+    }
     deferredPrompt.prompt()
     const result = await deferredPrompt.userChoice
     if (result.outcome === "accepted") setShow(false)
     setDeferredPrompt(null)
   }
 
+  const handleDismiss = () => {
+    setShow(false)
+    localStorage.setItem("install-dismissed", "true")
+  }
+
   if (!show) return null
+
+  const isSafariBrowser = isSafari() || isIOS()
 
   return (
     <div className="fixed bottom-24 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-md">
@@ -38,12 +74,16 @@ export function InstallPrompt() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-primary">{locale === "ar" ? "ثبّت التطبيق" : "Install App"}</p>
-          <p className="text-xs text-muted-foreground truncate">{locale === "ar" ? "أضف أجرني بلس لشاشتك الرئيسية" : "Add Ajrni Plus to your home screen"}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {locale === "ar"
+              ? isSafariBrowser ? "اضغط على زر المشاركة ← أضف للشاشة الرئيسية" : "أضف أجرني بلس لشاشتك الرئيسية"
+              : isSafariBrowser ? "Tap Share → Add to Home Screen" : "Add Ajrni Plus to your home screen"}
+          </p>
         </div>
         <button onClick={handleInstall} className="shrink-0 px-4 py-2 rounded-xl bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition-all">
           {locale === "ar" ? "تثبيت" : "Install"}
         </button>
-        <button onClick={() => setShow(false)} className="shrink-0 p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-all">
+        <button onClick={handleDismiss} className="shrink-0 p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-all">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
