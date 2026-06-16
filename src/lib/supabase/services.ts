@@ -137,6 +137,7 @@ export const carService = {
           const { data: offices } = await supabase.from("Offices").select("*").in("id", officeIds)
           const officeMap = Object.fromEntries((offices || []).map((o: any) => [o.id, o]))
           result = result.map((c: any) => ({ ...c, office: officeMap[c.office_id] || null }))
+          result = result.filter((c: any) => c.office?.is_active !== false)
         }
       }
       if (filters?.country) result = result.filter((c: any) => c.office?.country === filters.country)
@@ -154,6 +155,7 @@ export const carService = {
       if (error) throw error
       if (data?.office_id) {
         const { data: office } = await supabase.from("Offices").select("*").eq("id", data.office_id).single()
+        if (office && office.is_active === false) return null
         return { ...data, office: office || null }
       }
       return { ...data, office: null }
