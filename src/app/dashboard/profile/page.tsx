@@ -240,8 +240,8 @@ export default function DashboardProfilePage() {
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-6">
           <div className="border-b border-gray-100 pb-6">
             <h3 className="text-sm font-semibold text-primary mb-4">{locale === "ar" ? "صورة الغلاف" : "Cover Image"}</h3>
-            <div className="flex items-center gap-5">
-              <div className="relative w-full max-w-md h-32 shrink-0 rounded-2xl overflow-hidden border border-gray-200 bg-muted">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+              <div className="relative w-full sm:max-w-md h-28 sm:h-32 shrink-0 rounded-2xl overflow-hidden border border-gray-200 bg-muted">
                 {(coverPreview || existingCover) ? (
                   <img src={coverPreview || existingCover!} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -271,25 +271,22 @@ export default function DashboardProfilePage() {
 
           <div>
             <h3 className="text-sm font-semibold text-primary mb-4">{locale === "ar" ? "صورة الملف الشخصي" : "Profile Image"}</h3>
-            <div className="relative w-24 h-24 shrink-0">
-              {currentImage ? (
-                <img
-                  src={currentImage}
-                  alt=""
-                  className="w-24 h-24 rounded-2xl object-cover border border-gray-200"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center border border-gray-200">
-                  <Camera className="w-8 h-8 text-muted-foreground" />
-                </div>
-              )}
-              {uploadingImage && (
-                <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-white" />
-                </div>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0">
+                {currentImage ? (
+                  <img src={currentImage} alt="" className="w-full h-full rounded-2xl object-cover border border-gray-200" />
+                ) : (
+                  <div className="w-full h-full rounded-2xl bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center border border-gray-200">
+                    <Camera className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                )}
+                {uploadingImage && (
+                  <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -334,6 +331,7 @@ export default function DashboardProfilePage() {
                 </Button>
               )}
             </div>
+          </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
