@@ -264,6 +264,112 @@ export const favoriteService = {
   },
 }
 
+export const bookingRequestService = {
+  async create(data: {
+    user_id: string; country?: string; city?: string; car_type?: string
+    brand?: string; model?: string; pickup_date?: string; return_date?: string
+    budget_per_day?: number; notes?: string; full_name?: string; phone_number?: string
+  }) {
+    const payload = { ...data }
+    if (payload.full_name === null) delete payload.full_name
+    if (payload.phone_number === null) delete payload.phone_number
+    const { data: request, error } = await supabase.from("BookingRequests").insert(payload).select().single()
+    if (error) {
+      console.error("[bookingRequestService.create] Supabase error:", error, "details:", (error as any)?.details, "message:", (error as any)?.message, "code:", (error as any)?.code)
+      throw new Error((error as any)?.message || (error as any)?.details || JSON.stringify(error) || "Failed to create booking request")
+    }
+    return request
+  },
+
+  async getByUser(userId: string) {
+    const { data, error } = await supabase
+      .from("BookingRequests")
+      .select("*, offers:BookingOffers(*)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+    if (error) throw error
+    return data || []
+  },
+
+  async getByOffice(officeId: string) {
+    const { data, error } = await supabase
+      .from("BookingRequestOffices")
+      .select("*, request:BookingRequests(*)")
+      .eq("office_id", officeId)
+      .neq("status", "rejected")
+      .order("created_at", { ascending: false })
+    if (error) throw error
+    return data || []
+  },
+
+  async getOffersByRequest(requestId: string) {
+    const { data, error } = await supabase
+      .from("BookingOffers")
+      .select("*, office:Offices(*)")
+      .eq("request_id", requestId)
+      .order("created_at", { ascending: false })
+    if (error) throw error
+    return data || []
+  },
+
+  async getUnviewedCount(officeId: string) {
+    const { data, error } = await supabase
+      .from("BookingRequestOffices")
+      .select("id, request:BookingRequests!inner(id, status)")
+      .eq("office_id", officeId)
+      .eq("status", "sent")
+      .neq("request.status", "completed")
+    if (error) throw error
+    return data?.length || 0
+  },
+
+  async markViewed(assignmentId: string) {
+    const { error } = await supabase
+      .from("BookingRequestOffices")
+      .update({ status: "viewed" })
+      .eq("id", assignmentId)
+    if (error) throw error
+  },
+}
+
+export const bookingOfferService = {
+  async create(data: { request_id: string; office_id: string; car_name?: string; car_model?: string; price_per_day?: number; total_price?: number; notes?: string }) {
+    const { data: offer, error } = await supabase.from("BookingOffers").insert(data).select()
+    if (error) throw new Error((error as any)?.message || JSON.stringify(error))
+    return offer?.[0] || null
+  },
+
+  async getUserRequestsWithOffers(userId: string) {
+    const requests = await bookingRequestService.getByUser(userId)
+    for (const req of requests as any[]) {
+      req.offers = await bookingRequestService.getOffersByRequest(req.id)
+    }
+    return requests
+  },
+
+  async acceptOffer(offerId: string, requestId: string) {
+    console.log("[acceptOffer] starting", { offerId, requestId })
+    const r1 = await supabase.from("BookingOffers").update({ status: "accepted" }).eq("id", offerId)
+    console.log("[acceptOffer] step1 (accept offer)", { data: r1.data, error: r1.error })
+    if (r1.error) throw new Error(`step1 accept offer: ${r1.error.message}`)
+    const r2 = await supabase.from("BookingOffers").update({ status: "rejected" }).eq("request_id", requestId).neq("id", offerId)
+    console.log("[acceptOffer] step2 (reject others)", { data: r2.data, error: r2.error })
+    if (r2.error) throw new Error(`step2 reject others: ${r2.error.message}`)
+    const r3 = await supabase.from("BookingRequests").update({ status: "completed" }).eq("id", requestId)
+    console.log("[acceptOffer] step3 (complete request)", { data: r3.data, error: r3.error })
+    if (r3.error) throw new Error(`step3 complete request: ${r3.error.message}`)
+    try {
+      const { data: offer } = await supabase.from("BookingOffers").select("office_id").eq("id", offerId).single()
+      if (offer?.office_id) {
+        await supabase.from("BookingRequestOffices").update({ status: "completed" }).eq("request_id", requestId).eq("office_id", offer.office_id)
+        await supabase.from("BookingRequestOffices").update({ status: "rejected" }).eq("request_id", requestId).neq("office_id", offer.office_id)
+      }
+    } catch (e) {
+      console.error("[acceptOffer] office assignment update failed (non-critical):", e)
+    }
+  },
+}
+
 export const bookingService = {
   async getByOffice(officeId: string) {
     const { data, error } = await supabase

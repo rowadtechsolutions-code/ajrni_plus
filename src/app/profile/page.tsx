@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useAuth } from "@/hooks/useAuth"
 import Link from "next/link"
-import { User, Shield, LogOut, ChevronLeft, Heart, Save, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Mail, Phone, Globe, MapPin, UserCircle } from "lucide-react"
+import { User, Shield, LogOut, ChevronLeft, Heart, Save, Loader2, CheckCircle2, AlertCircle, AlertTriangle, Mail, Phone, Globe, MapPin, UserCircle, MessageCircle } from "lucide-react"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 import { userService } from "@/lib/supabase/services"
@@ -180,6 +180,7 @@ export default function ProfilePage() {
   const roleDotColor = profile?.role === "OFFICE" ? "bg-secondary" : profile?.role === "ADMIN" ? "bg-accent" : "bg-success"
 
   const navItems = [
+    { icon: MessageCircle, label: locale === "ar" ? "طلباتي" : "My Requests", href: "/my-requests", desc: locale === "ar" ? "عرض طلبات السيارات" : "View car requests" },
     ...(profile?.role !== "OFFICE" ? [{ icon: Heart, label: t("nav.wishlist"), href: "/favorites", desc: locale === "ar" ? "السيارات المفضلة" : "Favorite cars" }] : []),
     ...(profile?.role === "OFFICE" ? [{ icon: Shield, label: t("nav.dashboard"), href: "/dashboard", desc: locale === "ar" ? "لوحة التحكم" : "Dashboard" }] : []),
     ...(profile?.role === "ADMIN" ? [{ icon: Shield, label: t("nav.admin"), href: "/admin", desc: locale === "ar" ? "لوحة الإدارة" : "Admin panel" }] : []),

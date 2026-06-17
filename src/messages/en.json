@@ -214,6 +214,14 @@
     "reset_password_error": "No account found with this email",
     "go_back": "Back to login"
   },
+  "dashboard": {
+    "my_cars": "My Cars",
+    "requests": "Requests",
+    "analytics": "Analytics",
+    "profile": "Profile",
+    "add_car": "Add Car",
+    "title": "Dashboard"
+  },
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",
