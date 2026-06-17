@@ -56,6 +56,9 @@ export default function DashboardRequestsPage() {
       if (!selectedRequest || !user?.id) return
       const errors: Record<string, string> = {}
       if (!offerForm.carName.trim()) errors.carName = locale === "ar" ? "اسم السيارة مطلوب" : "Car name is required"
+      if (!offerForm.carYear.trim()) errors.carYear = locale === "ar" ? "سنة الصنع مطلوبة" : "Year is required"
+      if (!offerForm.pricePerDay.trim()) errors.pricePerDay = locale === "ar" ? "السعر اليومي مطلوب" : "Price per day is required"
+      if (!offerForm.totalPrice.trim()) errors.totalPrice = locale === "ar" ? "السعر الإجمالي مطلوب" : "Total price is required"
       if (Object.keys(errors).length) { setOfferErrors(errors); throw new Error("validation") }
       setOfferErrors({})
       await bookingOfferService.create({
@@ -155,18 +158,20 @@ export default function DashboardRequestsPage() {
 
       <Modal open={!!selectedRequest && !offerModal} onClose={() => setSelectedRequest(null)} title={locale === "ar" ? "تفاصيل الطلب" : "Request Details"} className="max-w-lg">
         {selectedRequest?.request && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div><p className="text-muted-foreground text-xs">{locale === "ar" ? "الاسم" : "Name"}</p><p className="font-medium">{selectedRequest.request.full_name || "-"}</p></div>
-              <div><p className="text-muted-foreground text-xs">{locale === "ar" ? "الجوال" : "Phone"}</p><p className="font-medium" dir="ltr">{selectedRequest.request.phone_number || "-"}</p></div>
-              <div><p className="text-muted-foreground text-xs">{locale === "ar" ? "الدولة" : "Country"}</p><p className="font-medium">{selectedRequest.request.country || "-"}</p></div>
-              <div><p className="text-muted-foreground text-xs">{locale === "ar" ? "المدينة" : "City"}</p><p className="font-medium">{selectedRequest.request.city || "-"}</p></div>
-              <div><p className="text-muted-foreground text-xs">{locale === "ar" ? "نوع السيارة" : "Car Type"}</p><p className="font-medium">{selectedRequest.request.car_type || "-"}</p></div>
-              <div><p className="text-muted-foreground text-xs">{locale === "ar" ? "الماركة" : "Brand"}</p><p className="font-medium">{selectedRequest.request.brand || "-"}</p></div>
-              <div><p className="text-muted-foreground text-xs">{locale === "ar" ? "الموديل" : "Model"}</p><p className="font-medium">{selectedRequest.request.model || "-"}</p></div>
-              <div><p className="text-muted-foreground text-xs">{locale === "ar" ? "الميزانية" : "Budget"}</p><p className="font-medium">{selectedRequest.request.budget_per_day ? `${selectedRequest.request.budget_per_day}/day` : "-"}</p></div>
+          <div className="space-y-4 max-h-[60vh] sm:max-h-none overflow-y-auto -mx-2 sm:mx-0 px-2 sm:px-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الاسم" : "Name"}</p><p className="font-medium mt-1">{selectedRequest.request.full_name || "-"}</p></div>
+              <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الجوال" : "Phone"}</p><p className="font-medium mt-1" dir="ltr">{selectedRequest.request.phone_number || "-"}</p></div>
+              <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الدولة" : "Country"}</p><p className="font-medium mt-1">{selectedRequest.request.country || "-"}</p></div>
+              <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "المدينة" : "City"}</p><p className="font-medium mt-1">{selectedRequest.request.city || "-"}</p></div>
+              <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "نوع السيارة" : "Car Type"}</p><p className="font-medium mt-1">{selectedRequest.request.car_type || "-"}</p></div>
+              <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الماركة" : "Brand"}</p><p className="font-medium mt-1">{selectedRequest.request.brand || "-"}</p></div>
+              <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الموديل" : "Model"}</p><p className="font-medium mt-1">{selectedRequest.request.model || "-"}</p></div>
+              <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الميزانية" : "Budget"}</p><p className="font-medium mt-1">{selectedRequest.request.budget_per_day ? `${selectedRequest.request.budget_per_day}/day` : "-"}</p></div>
             </div>
-            {selectedRequest.request.notes && <div><p className="text-muted-foreground text-xs">{locale === "ar" ? "ملاحظات" : "Notes"}</p><p className="text-sm">{selectedRequest.request.notes}</p></div>}
+            {selectedRequest.request.notes && (
+              <div className="bg-muted/20 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide mb-1">{locale === "ar" ? "ملاحظات" : "Notes"}</p><p className="text-sm">{selectedRequest.request.notes}</p></div>
+            )}
             {myOffers.length > 0 && (
               <div className="border-t pt-3">
                 <h4 className="font-semibold text-sm text-primary mb-2">{locale === "ar" ? "عروضي" : "My Offers"}</h4>
@@ -216,13 +221,22 @@ export default function DashboardRequestsPage() {
         ) : (
         <div className="space-y-3">
           <div>
-            <input value={offerForm.carName} onChange={(e) => setOfferForm(p => ({ ...p, carName: e.target.value }))} placeholder={locale === "ar" ? "اسم السيارة *" : "Car name *"} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
+            <input value={offerForm.carName} onChange={(e) => { setOfferErrors(p => ({ ...p, carName: "" })); setOfferForm(p => ({ ...p, carName: e.target.value })) }} placeholder={locale === "ar" ? "اسم السيارة *" : "Car name *"} className={`w-full rounded-xl border ${offerErrors.carName ? "border-error ring-2 ring-error/20" : "border-gray-200"} bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`} />
             {offerErrors.carName && <p className="text-xs text-error mt-1">{offerErrors.carName}</p>}
           </div>
-          <input value={offerForm.carYear} onChange={(e) => setOfferForm(p => ({ ...p, carYear: e.target.value }))} type="number" placeholder={locale === "ar" ? "سنة الصنع" : "Year"} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
+          <div>
+            <input value={offerForm.carYear} onChange={(e) => { setOfferErrors(p => ({ ...p, carYear: "" })); setOfferForm(p => ({ ...p, carYear: e.target.value })) }} type="number" placeholder={locale === "ar" ? "سنة الصنع *" : "Year *"} className={`w-full rounded-xl border ${offerErrors.carYear ? "border-error ring-2 ring-error/20" : "border-gray-200"} bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`} />
+            {offerErrors.carYear && <p className="text-xs text-error mt-1">{offerErrors.carYear}</p>}
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <input value={offerForm.pricePerDay} onChange={(e) => setOfferForm(p => ({ ...p, pricePerDay: e.target.value }))} type="number" placeholder={locale === "ar" ? "السعر اليومي" : "Price/day"} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
-            <input value={offerForm.totalPrice} onChange={(e) => setOfferForm(p => ({ ...p, totalPrice: e.target.value }))} type="number" placeholder={locale === "ar" ? "السعر الإجمالي" : "Total price"} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
+            <div>
+              <input value={offerForm.pricePerDay} onChange={(e) => { setOfferErrors(p => ({ ...p, pricePerDay: "" })); setOfferForm(p => ({ ...p, pricePerDay: e.target.value })) }} type="number" placeholder={locale === "ar" ? "السعر اليومي *" : "Price/day *"} className={`w-full rounded-xl border ${offerErrors.pricePerDay ? "border-error ring-2 ring-error/20" : "border-gray-200"} bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`} />
+              {offerErrors.pricePerDay && <p className="text-xs text-error mt-1">{offerErrors.pricePerDay}</p>}
+            </div>
+            <div>
+              <input value={offerForm.totalPrice} onChange={(e) => { setOfferErrors(p => ({ ...p, totalPrice: "" })); setOfferForm(p => ({ ...p, totalPrice: e.target.value })) }} type="number" placeholder={locale === "ar" ? "السعر الإجمالي *" : "Total price *"} className={`w-full rounded-xl border ${offerErrors.totalPrice ? "border-error ring-2 ring-error/20" : "border-gray-200"} bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`} />
+              {offerErrors.totalPrice && <p className="text-xs text-error mt-1">{offerErrors.totalPrice}</p>}
+            </div>
           </div>
           <textarea value={offerForm.notes} onChange={(e) => setOfferForm(p => ({ ...p, notes: e.target.value }))} placeholder={locale === "ar" ? "ملاحظات إضافية" : "Additional notes"} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 min-h-[80px] resize-y" />
           <Button onClick={() => sendOfferMutation.mutate()} disabled={sendOfferMutation.isPending} className="w-full">

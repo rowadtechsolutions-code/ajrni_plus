@@ -143,7 +143,7 @@ export default function MyRequestsPage() {
 
       <Modal open={!!selectedRequest} onClose={() => setSelectedRequest(null)} title={locale === "ar" ? "تفاصيل الطلب" : "Request Details"} className="max-w-lg">
         {selectedRequest && (
-          <div className="space-y-5">
+          <div className="space-y-5 max-h-[60vh] sm:max-h-none overflow-y-auto -mx-2 sm:mx-0 px-2 sm:px-0">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="bg-muted/30 rounded-xl p-3">
                 <p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "نوع السيارة" : "Car Type"}</p>
