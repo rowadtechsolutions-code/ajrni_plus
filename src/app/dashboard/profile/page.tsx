@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Camera, Loader2, Save, CheckCircle2, AlertCircle, Upload } from "lucide-react"
+import { Camera, Loader2, Save, CheckCircle2, AlertCircle, Upload, ImageIcon } from "lucide-react"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
@@ -18,6 +18,7 @@ export default function DashboardProfilePage() {
   const queryClient = useQueryClient()
   const { user } = useAuthStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState({
     office_name: "",
@@ -32,6 +33,10 @@ export default function DashboardProfilePage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
   const [existingImage, setExistingImage] = useState<string | null>(null)
+  const [uploadingCover, setUploadingCover] = useState(false)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [uploadedCoverUrl, setUploadedCoverUrl] = useState<string | null>(null)
+  const [existingCover, setExistingCover] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [successMsg, setSuccessMsg] = useState("")
 
@@ -53,6 +58,7 @@ export default function DashboardProfilePage() {
       })
       setCrNumber(office.commercial_registration_number || "")
       setExistingImage(office.image || null)
+      setExistingCover(office.cover || null)
     }
   }, [office])
 
@@ -82,7 +88,8 @@ export default function DashboardProfilePage() {
     setErrors((prev) => ({ ...prev, _form: "" }))
 
     try {
-      const url = await officeStorageService.uploadProfileImage(user.id, file, existingImage)
+      const oldUrl = existingImage || uploadedImageUrl
+      const url = await officeStorageService.uploadProfileImage(user.id, file, oldUrl)
       setUploadedImageUrl(url)
       setExistingImage(null)
     } catch (err: any) {
@@ -92,6 +99,43 @@ export default function DashboardProfilePage() {
       setUploadingImage(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
     }
+  }
+
+  const handleCoverSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user?.id) return
+
+    const allowed = ["image/jpeg", "image/png", "image/webp"]
+    if (!allowed.includes(file.type)) {
+      setErrors({ _form: locale === "ar" ? "الصيغة غير مدعومة. استخدم jpg, png أو webp" : "Unsupported format. Use jpg, png or webp" })
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => setCoverPreview(reader.result as string)
+    reader.readAsDataURL(file)
+
+    setUploadingCover(true)
+    setErrors((prev) => ({ ...prev, _form: "" }))
+
+    try {
+      const oldUrl = existingCover || uploadedCoverUrl
+      const url = await officeStorageService.uploadCoverImage(user.id, file, oldUrl)
+      setUploadedCoverUrl(url)
+      setExistingCover(null)
+    } catch (err: any) {
+      setCoverPreview(null)
+      setErrors({ _form: err.message || (locale === "ar" ? "فشل رفع صورة الغلاف" : "Cover upload failed") })
+    } finally {
+      setUploadingCover(false)
+      if (coverInputRef.current) coverInputRef.current.value = ""
+    }
+  }
+
+  const handleCancelCover = () => {
+    setCoverPreview(null)
+    setUploadedCoverUrl(null)
+    if (coverInputRef.current) coverInputRef.current.value = ""
   }
 
   const handleCancelImage = () => {
@@ -120,6 +164,7 @@ export default function DashboardProfilePage() {
     mutationFn: async () => {
       if (!user?.id) throw new Error("Not authenticated")
       const finalImageUrl = uploadedImageUrl || existingImage
+      const finalCoverUrl = uploadedCoverUrl || existingCover
       const updates: Record<string, any> = {
         office_name: form.office_name.trim(),
         email: form.email.trim(),
@@ -130,6 +175,8 @@ export default function DashboardProfilePage() {
       }
       if (finalImageUrl) updates.image = finalImageUrl
       else updates.image = null
+      if (finalCoverUrl) updates.cover = finalCoverUrl
+      else updates.cover = null
       return officeService.updateProfile(user.id, updates)
     },
     onSuccess: () => {
@@ -191,7 +238,39 @@ export default function DashboardProfilePage() {
 
       <form onSubmit={handleSubmit}>
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-6">
-          <div className="flex items-center gap-5">
+          <div className="border-b border-gray-100 pb-6">
+            <h3 className="text-sm font-semibold text-primary mb-4">{locale === "ar" ? "صورة الغلاف" : "Cover Image"}</h3>
+            <div className="flex items-center gap-5">
+              <div className="relative w-full max-w-md h-32 shrink-0 rounded-2xl overflow-hidden border border-gray-200 bg-muted">
+                {(coverPreview || existingCover) ? (
+                  <img src={coverPreview || existingCover!} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                )}
+                {uploadingCover && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleCoverSelect} disabled={uploadingCover} />
+                <Button type="button" variant="outline" size="sm" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                  {uploadingCover ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> {locale === "ar" ? "جاري الرفع..." : "Uploading..."}</> : <><Upload className="w-3.5 h-3.5" /> {locale === "ar" ? "رفع غلاف" : "Upload cover"}</>}
+                </Button>
+                {(coverPreview || uploadedCoverUrl) && (
+                  <Button type="button" variant="ghost" size="sm" onClick={handleCancelCover} disabled={uploadingCover}>
+                    {locale === "ar" ? "إلغاء" : "Cancel"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-primary mb-4">{locale === "ar" ? "صورة الملف الشخصي" : "Profile Image"}</h3>
             <div className="relative w-24 h-24 shrink-0">
               {currentImage ? (
                 <img

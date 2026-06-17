@@ -153,7 +153,12 @@ export default function OfficesPage() {
               >
                 <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col">
                   <div className="relative h-36 overflow-hidden">
-                    <img src={officeImages[i % officeImages.length]} alt={office.office_name} className="w-full h-full object-cover" loading="lazy" />
+                    <img
+                      src={office.cover || officeImages[i % officeImages.length]}
+                      alt={office.office_name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                     <div className="absolute bottom-3 right-3">
                       {office.is_active && (

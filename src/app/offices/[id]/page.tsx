@@ -59,7 +59,11 @@ export default function OfficePage() {
     <div>
       <div
         className="relative h-48 md:h-64 bg-gradient-to-br from-primary to-secondary"
-        style={{ backgroundImage: "url(https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1920)", backgroundSize: "cover", backgroundPosition: "center" }}
+        style={{
+          backgroundImage: `url(${o.cover || "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1920"})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center"
+        }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/70 to-secondary/70" />
       </div>

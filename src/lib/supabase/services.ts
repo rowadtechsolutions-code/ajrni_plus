@@ -116,6 +116,27 @@ export const officeStorageService = {
     const { data: urlData } = supabase.storage.from(OFFICES_BUCKET).getPublicUrl(data.path)
     return urlData.publicUrl
   },
+
+  async uploadCoverImage(userId: string, file: File, oldCoverUrl?: string | null) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      throw new Error("Unsupported image format. Use jpg, png, or webp.")
+    }
+    const ext = file.name.split(".").pop() || "jpg"
+    const timestamp = Date.now()
+    const path = `offices/${userId}/cover-${timestamp}.${ext}`
+
+    if (oldCoverUrl) {
+      const oldPath = extractStoragePath(oldCoverUrl)
+      if (oldPath) {
+        await supabase.storage.from(OFFICES_BUCKET).remove([oldPath]).catch(() => {})
+      }
+    }
+
+    const { data, error } = await supabase.storage.from(OFFICES_BUCKET).upload(path, file, { upsert: true })
+    if (error) throw new Error(error.message || JSON.stringify(error))
+    const { data: urlData } = supabase.storage.from(OFFICES_BUCKET).getPublicUrl(data.path)
+    return urlData.publicUrl
+  },
 }
 
 function extractStoragePath(publicUrl: string, bucket: string = OFFICES_BUCKET): string | null {

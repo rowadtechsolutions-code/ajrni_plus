@@ -22,6 +22,7 @@ export interface OfficeType {
   is_active: boolean | null
   bio: string | null
   image: string | null
+  cover: string | null
   commercial_registration_number: string | null
 }
 
