@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react"
+import { Plus, Pencil, Trash2, AlertTriangle, Loader2 } from "lucide-react"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
@@ -37,7 +37,7 @@ export default function DashboardCarsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => carService.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-office-cars"] }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["my-office-cars"] }); setDeleteTarget(null) },
   })
 
   const openEdit = (car: CarType) => {
@@ -125,9 +125,9 @@ export default function DashboardCarsPage() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Button onClick={() => { if (deleteTarget) { deleteMutation.mutate(deleteTarget.id); setDeleteTarget(null) } }} className="flex-1 bg-red-500 hover:bg-red-600 text-white">
-              <Trash2 className="w-4 h-4" />
-              {locale === "ar" ? "تأكيد الحذف" : "Confirm Delete"}
+            <Button onClick={() => { if (deleteTarget) deleteMutation.mutate(deleteTarget.id) }} disabled={deleteMutation.isPending} className="flex-1 bg-red-500 hover:bg-red-600 text-white">
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {deleteMutation.isPending ? (locale === "ar" ? "جاري الحذف..." : "Deleting...") : (locale === "ar" ? "تأكيد الحذف" : "Confirm Delete")}
             </Button>
             <Button onClick={() => setDeleteTarget(null)} variant="outline" className="flex-1">
               {locale === "ar" ? "إلغاء" : "Cancel"}

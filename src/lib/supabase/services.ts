@@ -221,6 +221,11 @@ export const carService = {
   },
 
   async delete(id: string) {
+    const { data: car } = await supabase.from("cars").select("images, image").eq("id", id).single()
+    const urls = [...(car?.images || []), ...(car?.image ? [car.image] : [])]
+    for (const url of urls) {
+      if (url) await storageService.deleteCarImageByUrl(url).catch(() => {})
+    }
     const { error } = await supabase.from("cars").delete().eq("id", id)
     if (error) throw error
   },
