@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
@@ -21,6 +21,7 @@ export default function DashboardCarsPage() {
   const { user } = useAuthStore()
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingCar, setEditingCar] = useState<CarType | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<CarType | null>(null)
 
   const { data: office } = useQuery({
     queryKey: ["my-office", user?.id],
@@ -100,7 +101,7 @@ export default function DashboardCarsPage() {
                     <td className="p-3">
                       <div className="flex items-center gap-1">
                         <button onClick={() => openEdit(car)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><Pencil className="w-4 h-4" /></button>
-                        <button onClick={() => deleteMutation.mutate(car.id)} className="p-1.5 rounded-lg hover:bg-muted text-error"><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={() => setDeleteTarget(car)} className="p-1.5 rounded-lg hover:bg-muted text-error"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -110,6 +111,30 @@ export default function DashboardCarsPage() {
           </div>
         )}
       </div>
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} className="max-w-sm">
+        <div className="text-center py-4 space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-bold text-primary">{locale === "ar" ? "حذف السيارة" : "Delete Car"}</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {locale === "ar"
+                ? "هل أنت متأكد من حذف هذه السيارة؟ لا يمكن التراجع عن هذا الإجراء بعد الحذف."
+                : "Are you sure you want to delete this car? This action cannot be undone."}
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Button onClick={() => { if (deleteTarget) { deleteMutation.mutate(deleteTarget.id); setDeleteTarget(null) } }} className="flex-1 bg-red-500 hover:bg-red-600 text-white">
+              <Trash2 className="w-4 h-4" />
+              {locale === "ar" ? "تأكيد الحذف" : "Confirm Delete"}
+            </Button>
+            <Button onClick={() => setDeleteTarget(null)} variant="outline" className="flex-1">
+              {locale === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
       <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title={locale === "ar" ? (editingCar ? "تعديل السيارة" : "إضافة سيارة") : editingCar ? "Edit Car" : "Add Car"}>
         {office && <AddCarForm officeId={office.id} editingCar={editingCar} onClose={() => setShowAddModal(false)} />}
       </Modal>

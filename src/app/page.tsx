@@ -97,13 +97,13 @@ export default function HomePage() {
   })
 
   const { data: trendingCars = [], isLoading: carsLoading } = useQuery({
-    queryKey: ["trending-cars", effectiveCountry, effectiveCity],
-    queryFn: () => carService.getAll({
-      country: effectiveCountry,
-      city: effectiveCity,
-    }),
+    queryKey: ["trending-cars", isAuthenticated ? effectiveCountry : "OM", isAuthenticated ? effectiveCity : undefined],
+    queryFn: () => carService.getAll(
+      isAuthenticated
+        ? { country: effectiveCountry, city: effectiveCity }
+        : { country: "OM" }
+    ),
     staleTime: 5 * 60 * 1000,
-    enabled: !!(effectiveCountry || effectiveCity),
   })
 
   const heroRef = useRef(null)
@@ -224,16 +224,16 @@ export default function HomePage() {
               {t("home.trending")}
             </h2>
             <p className="text-sm text-muted-foreground mt-1.5">
-              {effectiveCountry
+              {isAuthenticated && effectiveCountry
                 ? locale === "ar"
                   ? `سيارات رائجة في ${effectiveCity || (getCountryByCode(effectiveCountry) ? (locale === "ar" ? getCountryByCode(effectiveCountry)?.nameAr : getCountryByCode(effectiveCountry)?.nameEn) : effectiveCountry)}`
                   : `Trending cars in ${effectiveCity || (getCountryByCode(effectiveCountry) ? getCountryByCode(effectiveCountry)?.nameEn : effectiveCountry)}`
                 : locale === "ar"
-                  ? "اختر موقعك لرؤية السيارات الرائجة"
-                  : "Select your location to see trending cars"}
+                  ? "سيارات رائجة في عمان"
+                  : "Trending cars in Oman"}
             </p>
           </div>
-          <Link href={`/cars${effectiveCountry ? `?country=${effectiveCountry}` : ""}`} className="group inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700 transition-colors">
+          <Link href={`/cars${isAuthenticated && effectiveCountry ? `?country=${effectiveCountry}` : "?country=OM"}`} className="group inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700 transition-colors">
             {t("home.view_all")}
             <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -275,13 +275,25 @@ export default function HomePage() {
                         loading="lazy"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                      {car.status === "available" && (
+                      {car.status === "available" ? (
                         <div className="absolute top-3 right-3">
                           <span className="inline-flex items-center rounded-full bg-emerald-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
                             {locale === "ar" ? "متاح" : "Available"}
                           </span>
                         </div>
-                      )}
+                      ) : car.status === "rented" ? (
+                        <div className="absolute top-3 right-3">
+                          <span className="inline-flex items-center rounded-full bg-amber-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                            {locale === "ar" ? "مؤجرة" : "Rented"}
+                          </span>
+                        </div>
+                      ) : car.status === "maintenance" ? (
+                        <div className="absolute top-3 right-3">
+                          <span className="inline-flex items-center rounded-full bg-red-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                            {locale === "ar" ? "صيانة" : "Maintenance"}
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                     <div className="p-4">
                       <h3 className="font-semibold text-primary text-sm leading-snug line-clamp-1">
@@ -328,16 +340,16 @@ export default function HomePage() {
           <div className="text-center py-12">
             <Car className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
             <p className="text-muted-foreground">
-              {effectiveCountry
+              {isAuthenticated && effectiveCountry
                 ? locale === "ar"
                   ? "لا توجد سيارات رائجة في منطقتك حالياً"
                   : "No trending cars in your area yet"
                 : locale === "ar"
-                  ? "اختر دولتك ومدينتك لرؤية السيارات الرائجة"
-                  : "Select your country and city to see trending cars"}
+                  ? "لا توجد سيارات رائجة في عمان حالياً"
+                  : "No trending cars in Oman yet"}
             </p>
-            {!effectiveCountry && (
-              <Link href="/cars" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700">
+            {!isAuthenticated && (
+              <Link href="/cars?country=OM" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700">
                 {locale === "ar" ? "تصفح السيارات" : "Browse cars"}
                 <ArrowLeft className="w-4 h-4" />
               </Link>
@@ -354,24 +366,25 @@ export default function HomePage() {
               {locale === "ar" ? "مكاتب رائجة" : "Trending Offices"}
             </h2>
             <p className="text-sm text-muted-foreground mt-1.5">
-              {effectiveCountry
+              {isAuthenticated && effectiveCountry
                 ? locale === "ar"
                   ? `مكاتب في ${getCountryByCode(effectiveCountry) ? (locale === "ar" ? getCountryByCode(effectiveCountry)?.nameAr : getCountryByCode(effectiveCountry)?.nameEn) : effectiveCountry}`
                   : `Offices in ${getCountryByCode(effectiveCountry) ? getCountryByCode(effectiveCountry)?.nameEn : effectiveCountry}`
                 : locale === "ar"
-                  ? "مكاتب التأجير الأعلى تقييماً"
-                  : "Top-rated rental offices"}
+                  ? "مكاتب تأجير في عمان"
+                  : "Offices in Oman"}
             </p>
           </div>
-          <Link href={`/offices${effectiveCountry ? `?country=${effectiveCountry}` : ""}`} className="group inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700 transition-colors">
+          <Link href={`/offices${isAuthenticated && effectiveCountry ? `?country=${effectiveCountry}` : "?country=OM"}`} className="group inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-blue-700 transition-colors">
             {t("home.view_all")}
             <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </motion.div>
         {(() => {
           const allOffices = trendingOffices as any[]
+          const officesCountry = isAuthenticated ? effectiveCountry : "OM"
           const filteredOffices = allOffices
-            .filter((o: any) => !effectiveCountry || o.country === effectiveCountry)
+            .filter((o: any) => !officesCountry || o.country === officesCountry)
             .slice(0, 8)
           const hasOffices = filteredOffices.length > 0
           const isLoading = officesLoading
@@ -450,13 +463,13 @@ export default function HomePage() {
             <div className="text-center py-12">
               <Building2 className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
               <p className="text-muted-foreground">
-                {effectiveCountry
+                {isAuthenticated && effectiveCountry
                   ? locale === "ar"
                     ? "لا توجد مكاتب رائجة في منطقتك حالياً"
                     : "No trending offices in your area yet"
                   : locale === "ar"
-                    ? "لا توجد مكاتب رائجة حالياً"
-                    : "No trending offices at the moment"}
+                    ? "لا توجد مكاتب رائجة في عمان حالياً"
+                    : "No trending offices in Oman yet"}
               </p>
             </div>
           )

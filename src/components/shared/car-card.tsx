@@ -52,11 +52,19 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
-              {car.status === "available" && (
+              {car.status === "available" ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                  {locale === "ar" ? "متاح الآن" : "Available Now"}
+                  {locale === "ar" ? "متاح" : "Available"}
                 </span>
-              )}
+              ) : car.status === "rented" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                  {locale === "ar" ? "مؤجرة" : "Rented"}
+                </span>
+              ) : car.status === "maintenance" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                  {locale === "ar" ? "صيانة" : "Maintenance"}
+                </span>
+              ) : null}
             </div>
             <button
               onClick={handleToggleFav}

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Send, CheckCircle } from "lucide-react"
+import { Loader2, Send, CheckCircle, ArrowLeft, ExternalLink } from "lucide-react"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -115,13 +115,30 @@ export function CustomCarRequestModal({ open, onClose }: CustomCarRequestModalPr
   return (
     <Modal open={open} onClose={handleClose} title={locale === "ar" ? "طلب سيارة مخصص" : "Custom Car Request"} className="max-w-lg">
       {success ? (
-        <div className="text-center py-6 space-y-4">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+        <div className="text-center py-8 space-y-5">
+          <div className="relative mx-auto w-20 h-20">
+            <div className="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-40" />
+            <div className="relative w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-green-200">
+              <CheckCircle className="w-10 h-10 text-white" />
+            </div>
           </div>
-          <h3 className="text-lg font-bold text-primary">{locale === "ar" ? "تم إرسال الطلب" : "Request Sent"}</h3>
-          <p className="text-sm text-muted-foreground">{locale === "ar" ? "سيتم إعلامك عند ورود عروض من المكاتب" : "You will be notified when offices send their offers"}</p>
-          <Button onClick={handleClose} className="mt-2">{locale === "ar" ? "تم" : "Done"}</Button>
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-primary">{locale === "ar" ? "تم إرسال الطلب بنجاح" : "Request Sent Successfully"}</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
+              {locale === "ar"
+                ? "تم إرسال طلب السيارة المخصصة بنجاح، يمكنك متابعة حالة الطلب من صفحة \"الطلبات\" في الملف الشخصي."
+                : "Your custom car request has been sent successfully. You can track its status from the \"Requests\" page in your profile."}
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Button onClick={() => { handleClose(); router.push("/my-requests") }} className="flex-1">
+              <ExternalLink className="w-4 h-4" />
+              {locale === "ar" ? "عرض الطلبات" : "View Requests"}
+            </Button>
+            <Button onClick={handleClose} variant="outline" className="flex-1">
+              {locale === "ar" ? "إغلاق" : "Close"}
+            </Button>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-3 max-h-[70vh] sm:max-h-none overflow-y-auto -mx-2 sm:mx-0 px-2 sm:px-0">

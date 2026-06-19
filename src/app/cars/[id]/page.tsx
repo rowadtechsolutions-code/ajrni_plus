@@ -115,7 +115,13 @@ export default function CarDetailsPage() {
                 {formatCurrency(Number(c.price || 0), getCurrencyByCountry(office?.country).code)}
               </span>
               <span className="text-sm text-muted-foreground">{c.rental_type === "monthly" ? (locale === "ar" ? "/ شهر" : "/ month") : "/ " + t("cars.per_day")}</span>
-              {c.status === "available" && <Badge variant="success">{t("cars.available_now")}</Badge>}
+              {c.status === "available" ? (
+                <Badge variant="success">{locale === "ar" ? "متاح" : "Available"}</Badge>
+              ) : c.status === "rented" ? (
+                <Badge variant="warning">{locale === "ar" ? "مؤجرة" : "Rented"}</Badge>
+              ) : c.status === "maintenance" ? (
+                <Badge variant="error">{locale === "ar" ? "صيانة" : "Maintenance"}</Badge>
+              ) : null}
             </div>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
