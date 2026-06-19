@@ -34,6 +34,7 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
   const [imageFiles, setImageFiles] = useState<(File | null)[]>([null, null, null])
   const [imagePreviews, setImagePreviews] = useState<(string | null)[]>([null, null, null])
   const [uploading, setUploading] = useState(false)
+  const [imagesError, setImagesError] = useState("")
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null])
 
   const step1 = useForm<CarStep1Data>({ resolver: zodResolver(carStep1Schema), defaultValues: { name: editingCar?.name || "", brand: editingCar?.brand || "", model: editingCar?.model || "" } })
@@ -149,6 +150,7 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
     newPreviews[index] = URL.createObjectURL(file)
     setImageFiles(newFiles)
     setImagePreviews(newPreviews)
+    setImagesError("")
   }
 
   const removeImage = (index: number) => {
@@ -330,6 +332,7 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-2">{locale === "ar" ? "الحد الأقصى 3 صور" : "Max 3 images"}</p>
+            {imagesError && <p className="text-xs text-error mt-1">{imagesError}</p>}
           </div>
         </div>
       )}
@@ -347,7 +350,12 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
             <ChevronLeft className="w-4 h-4" />
           </button>
         ) : (
-          <Button onClick={() => createMutation.mutate()} loading={createMutation.isPending} className="px-6">
+          <Button onClick={() => {
+            const hasImage = imagePreviews.some(Boolean) || imageFiles.some(Boolean)
+            if (!hasImage) { setImagesError(locale === "ar" ? "يرجى رفع صورة واحدة على الأقل" : "Please upload at least one image"); return }
+            setImagesError("")
+            createMutation.mutate()
+          }} loading={createMutation.isPending} className="px-6">
             {locale === "ar" ? (editingCar ? "حفظ التعديلات" : "إضافة السيارة") : editingCar ? "Save Changes" : "Add Car"}
           </Button>
         )}
