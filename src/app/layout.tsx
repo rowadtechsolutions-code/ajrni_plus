@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="أجرني بلس" />
       </head>
-      <body className="min-h-screen bg-background antialiased">
+      <body className="min-h-screen bg-background antialiased" suppressHydrationWarning>
         <QueryProvider>
           <AuthProvider>
             <LocaleProvider>

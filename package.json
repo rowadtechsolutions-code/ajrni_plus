@@ -10,7 +10,9 @@
     "db:generate": "echo 'Using Supabase - no Prisma migration needed'",
     "db:push": "echo 'Using Supabase - no Prisma migration needed'",
     "db:seed": "echo 'Using Supabase - no Prisma seeding needed'",
-    "db:studio": "echo 'Using Supabase Studio instead'"
+    "db:studio": "echo 'Using Supabase Studio instead'",
+    "storage:audit": "node scripts/storage-optimize.mjs --audit",
+    "storage:optimize": "node scripts/storage-optimize.mjs --optimize"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
@@ -47,6 +49,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.79.0",
     "react-icons": "^5.6.0",
+    "sharp": "^0.35.2",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
