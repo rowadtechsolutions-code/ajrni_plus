@@ -72,7 +72,7 @@ export default function OfficePage() {
           <div className="flex flex-col sm:flex-row items-start gap-4">
             <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gradient-to-br from-secondary/20 to-blue-600/20 shrink-0 border-4 border-white shadow-md flex items-center justify-center text-3xl font-bold text-secondary">
               {o.image ? (
-                <img src={o.image} alt={o.office_name || ""} className="w-full h-full object-cover" />
+                <img src={o.image} alt={o.office_name || ""} className="w-full h-full object-cover" loading="lazy" />
               ) : (
                 o.office_name?.[0] || "O"
               )}

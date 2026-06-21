@@ -243,7 +243,7 @@ export default function DashboardProfilePage() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <div className="relative w-full sm:max-w-md h-28 sm:h-32 shrink-0 rounded-2xl overflow-hidden border border-gray-200 bg-muted">
                 {(coverPreview || existingCover) ? (
-                  <img src={coverPreview || existingCover!} alt="" className="w-full h-full object-cover" />
+                  <img src={coverPreview || existingCover!} alt="" className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <ImageIcon className="w-8 h-8 text-muted-foreground" />
@@ -274,7 +274,7 @@ export default function DashboardProfilePage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0">
                 {currentImage ? (
-                  <img src={currentImage} alt="" className="w-full h-full rounded-2xl object-cover border border-gray-200" />
+                  <img src={currentImage} alt="" className="w-full h-full rounded-2xl object-cover border border-gray-200" loading="lazy" />
                 ) : (
                   <div className="w-full h-full rounded-2xl bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center border border-gray-200">
                     <Camera className="w-8 h-8 text-muted-foreground" />

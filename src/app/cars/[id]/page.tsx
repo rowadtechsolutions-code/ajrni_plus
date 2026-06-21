@@ -67,7 +67,7 @@ export default function CarDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="relative rounded-2xl overflow-hidden bg-muted h-[300px] md:h-[400px]">
-            <img src={carImages[selectedImage]} alt={c.name} className="w-full h-full object-cover" />
+            <img src={carImages[selectedImage]} alt={c.name} className="w-full h-full object-cover" fetchPriority="high" />
             <div className="absolute top-3 left-3 flex gap-2">
               <button onClick={() => { if (user?.id) toggleFavorite(user.id, c.id) }} className="p-2 rounded-full bg-white/80 hover:bg-white"><Heart className={cn("w-5 h-5", wishlisted ? "fill-error text-error" : "")} /></button>
               <button
@@ -100,7 +100,7 @@ export default function CarDetailsPage() {
             <div className="flex gap-2">
               {carImages.map((img, i) => (
                 <button key={i} onClick={() => setSelectedImage(i)} className={`relative w-24 h-16 rounded-xl overflow-hidden border-2 transition-all ${selectedImage === i ? "border-secondary ring-2 ring-secondary/30" : "border-gray-200 opacity-70 hover:opacity-100"}`}>
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                 </button>
               ))}
             </div>
@@ -154,7 +154,7 @@ export default function CarDetailsPage() {
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/20 to-blue-600/20 flex items-center justify-center text-lg font-bold text-secondary shrink-0 overflow-hidden">
                   {office.image ? (
-                    <img src={office.image} alt={office.office_name || ""} className="w-full h-full object-cover" />
+                    <img src={office.image} alt={office.office_name || ""} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     office.office_name?.[0] || "O"
                   )}

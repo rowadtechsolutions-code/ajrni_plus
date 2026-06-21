@@ -82,7 +82,7 @@ export default function DashboardCarsPage() {
                   <tr key={car.id} className="border-b border-border hover:bg-muted/50">
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        {car.images?.length ? <img src={car.images[0]} alt="" className="w-10 h-10 rounded-xl object-cover" /> : car.image && <img src={car.image} alt="" className="w-10 h-10 rounded-xl object-cover" />}
+                        {car.images?.length ? <img src={car.images[0]} alt="" className="w-10 h-10 rounded-xl object-cover" loading="lazy" /> : car.image && <img src={car.image} alt="" className="w-10 h-10 rounded-xl object-cover" loading="lazy" />}
                         <div>
                           <p className="font-medium">{car.name}</p>
                           <p className="text-xs text-muted-foreground">{car.brand} {car.year}</p>
