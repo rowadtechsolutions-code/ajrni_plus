@@ -33,15 +33,15 @@ export default function MyRequestsPage() {
   })
 
   const handleAccept = async (offer: any, req: any) => {
-    console.log("[handleAccept] clicked", { offerId: offer?.id, reqId: req?.id, officeId: offer?.office_id })
+    if (process.env.NODE_ENV !== "production") console.log("[handleAccept] clicked", { offerId: offer?.id, reqId: req?.id, officeId: offer?.office_id })
     try {
       await bookingOfferService.acceptOffer(offer.id, req.id)
-      console.log("[handleAccept] acceptOffer succeeded")
+      if (process.env.NODE_ENV !== "production") console.log("[handleAccept] acceptOffer succeeded")
       queryClient.invalidateQueries({ queryKey: ["my-requests", user?.id] })
       queryClient.invalidateQueries({ queryKey: ["request-offers", req.id] })
       setSelectedRequest(null)
     } catch (err: any) {
-      console.error("[handleAccept] acceptOffer threw:", err)
+      if (process.env.NODE_ENV !== "production") console.error("[handleAccept] acceptOffer threw:", err)
       alert(err?.message || (locale === "ar" ? "فشل قبول العرض" : "Failed to accept offer"))
     }
   }

@@ -3,6 +3,13 @@ import type { CarFilters } from "@/types"
 
 const supabase = getClient()
 
+const devLog = (typeof window !== "undefined" && process.env.NODE_ENV === "development")
+  ? (...args: unknown[]) => console.log(...args)
+  : () => {}
+const devError = (typeof window !== "undefined" && process.env.NODE_ENV === "development")
+  ? (...args: unknown[]) => console.error(...args)
+  : () => {}
+
 async function compressImage(file: File, maxSizeKB = 500): Promise<File> {
   const ext = file.name.split(".").pop()?.toLowerCase()
   if (!file.type.startsWith("image/")) return file
@@ -82,7 +89,7 @@ export const officeService = {
     const { data, error } = await supabase.from("Offices").update({ is_active }).eq("id", officeId).select().single()
     if (error) throw error
     const { error: carsError } = await supabase.from("cars").update({ is_active }).eq("office_id", officeId)
-    if (carsError) console.error("[toggleActive] cars update error:", carsError)
+    if (carsError) devError("[toggleActive] cars update error:", carsError)
     return data
   },
 
@@ -114,7 +121,7 @@ export const storageService = {
     const path = extractStoragePath(publicUrl, BUCKET)
     if (!path) return
     const { error } = await supabase.storage.from(BUCKET).remove([path])
-    if (error) console.error("[deleteCarImageByUrl] error:", error)
+    if (error) devError("[deleteCarImageByUrl] error:", error)
   },
 }
 
@@ -196,7 +203,7 @@ export const carService = {
       if (filters?.seats) query = query.gte("seats", filters.seats)
       const { data, error } = await query.order("created_at", { ascending: false })
       if (error) throw error
-      console.log("[carService.getAll] count:", data?.length, "first:", data?.[0]?.name)
+      devLog("[carService.getAll] count:", data?.length, "first:", data?.[0]?.name)
       let result: any[] = data || []
       result = result.filter((c: any) => c.is_active !== false)
       if (result.length > 0) {
@@ -212,7 +219,7 @@ export const carService = {
       if (filters?.city) result = result.filter((c: any) => c.office?.city === filters.city)
       return result
     } catch (e) {
-      console.error("[carService.getAll] exception:", e)
+      devError("[carService.getAll] exception:", e)
       throw e
     }
   },
@@ -228,22 +235,22 @@ export const carService = {
       }
       return { ...data, office: null }
     } catch (e) {
-      console.error("[carService.getById] error:", e)
+      devError("[carService.getById] error:", e)
       throw e
     }
   },
 
   async getByOffice(officeId: string) {
     try {
-      console.log("[carService.getByOffice] officeId:", officeId)
+      devLog("[carService.getByOffice] officeId:", officeId)
       const { data, error } = await supabase.from("cars").select("*").eq("office_id", officeId).order("created_at", { ascending: false })
       if (error) throw error
-      console.log("[carService.getByOffice] cars count:", data?.length)
+      devLog("[carService.getByOffice] cars count:", data?.length)
       if (!data || data.length === 0) return []
       const { data: office } = await supabase.from("Offices").select("*").eq("id", officeId).single()
       return data.map((c: any) => ({ ...c, office: office || null }))
     } catch (e) {
-      console.error("[carService.getByOffice] exception:", e)
+      devError("[carService.getByOffice] exception:", e)
       throw e
     }
   },
@@ -320,7 +327,7 @@ export const bookingRequestService = {
     if (payload.phone_number === null) delete payload.phone_number
     const { data: request, error } = await supabase.from("BookingRequests").insert(payload).select().single()
     if (error) {
-      console.error("[bookingRequestService.create] Supabase error:", error, "details:", (error as any)?.details, "message:", (error as any)?.message, "code:", (error as any)?.code)
+      devError("[bookingRequestService.create] Supabase error:", error, "details:", (error as any)?.details, "message:", (error as any)?.message, "code:", (error as any)?.code)
       throw new Error((error as any)?.message || (error as any)?.details || JSON.stringify(error) || "Failed to create booking request")
     }
     return request
@@ -393,15 +400,15 @@ export const bookingOfferService = {
   },
 
   async acceptOffer(offerId: string, requestId: string) {
-    console.log("[acceptOffer] starting", { offerId, requestId })
+    devLog("[acceptOffer] starting", { offerId, requestId })
     const r1 = await supabase.from("BookingOffers").update({ status: "accepted" }).eq("id", offerId)
-    console.log("[acceptOffer] step1 (accept offer)", { data: r1.data, error: r1.error })
+    devLog("[acceptOffer] step1 (accept offer)", { data: r1.data, error: r1.error })
     if (r1.error) throw new Error(`step1 accept offer: ${r1.error.message}`)
     const r2 = await supabase.from("BookingOffers").update({ status: "rejected" }).eq("request_id", requestId).neq("id", offerId)
-    console.log("[acceptOffer] step2 (reject others)", { data: r2.data, error: r2.error })
+    devLog("[acceptOffer] step2 (reject others)", { data: r2.data, error: r2.error })
     if (r2.error) throw new Error(`step2 reject others: ${r2.error.message}`)
     const r3 = await supabase.from("BookingRequests").update({ status: "completed" }).eq("id", requestId)
-    console.log("[acceptOffer] step3 (complete request)", { data: r3.data, error: r3.error })
+    devLog("[acceptOffer] step3 (complete request)", { data: r3.data, error: r3.error })
     if (r3.error) throw new Error(`step3 complete request: ${r3.error.message}`)
     try {
       const { data: offer } = await supabase.from("BookingOffers").select("office_id").eq("id", offerId).single()
@@ -410,7 +417,7 @@ export const bookingOfferService = {
         await supabase.from("BookingRequestOffices").update({ status: "rejected" }).eq("request_id", requestId).neq("office_id", offer.office_id)
       }
     } catch (e) {
-      console.error("[acceptOffer] office assignment update failed (non-critical):", e)
+      devError("[acceptOffer] office assignment update failed (non-critical):", e)
     }
   },
 }

@@ -79,6 +79,7 @@ export function Header() {
               <button
                 onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
                 className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-primary hover:bg-gray-100 rounded-xl transition-all duration-200"
+                aria-label={locale === "ar" ? "تغيير اللغة إلى الإنجليزية" : "Switch language to Arabic"}
               >
                 <Globe className="w-3.5 h-3.5" />
                 {locale === "ar" ? "EN" : "AR"}
@@ -90,12 +91,12 @@ export function Header() {
                 ) : isAuthenticated ? (
                   <>
                     {profile?.role === "OFFICE" && (
-                      <Link href="/dashboard" className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-gray-100 transition-all duration-200">
+                      <Link href="/dashboard" className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-gray-100 transition-all duration-200" aria-label={locale === "ar" ? "لوحة التحكم" : "Dashboard"}>
                         <LayoutDashboard className="w-4 h-4" />
                       </Link>
                     )}
                     {profile?.role === "ADMIN" && (
-                      <Link href="/admin" className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-gray-100 transition-all duration-200">
+                      <Link href="/admin" className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-gray-100 transition-all duration-200" aria-label={locale === "ar" ? "لوحة الإدارة" : "Admin"}>
                         <Shield className="w-4 h-4" />
                       </Link>
                     )}
@@ -163,7 +164,7 @@ export function Header() {
                     className="h-10 w-auto max-w-[180px] object-contain"
                   />
                 </div>
-                <button onClick={() => setMobileMenu(false)} className="p-2 rounded-xl hover:bg-gray-100 transition-all">
+                <button onClick={() => setMobileMenu(false)} className="p-2 rounded-xl hover:bg-gray-100 transition-all" aria-label={locale === "ar" ? "إغلاق" : "Close"}>
                   <X className="w-5 h-5" />
                 </button>
               </div>

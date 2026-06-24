@@ -81,7 +81,7 @@ export default function DashboardRequestsPage() {
     },
     onError: (err: any) => {
       if (err?.message !== "validation") {
-        console.error("Send offer error:", err)
+        if (process.env.NODE_ENV !== "production") console.error("Send offer error:", err)
         alert(err?.message || (locale === "ar" ? "فشل إرسال العرض" : "Failed to send offer"))
       }
     },

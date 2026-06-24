@@ -122,7 +122,7 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
       onClose()
     },
     onError: (err: any) => {
-      console.error("Add car error:", err)
+      if (process.env.NODE_ENV !== "production") console.error("Add car error:", err)
       alert(err?.message || "فشلت إضافة السيارة")
     },
   })

@@ -94,7 +94,7 @@ export function CustomCarRequestModal({ open, onClose }: CustomCarRequestModalPr
       })
       setSuccess(true)
     } catch (err: any) {
-      console.error("Request error:", err, "message:", err?.message, "details:", err?.details, "hint:", err?.hint, "code:", err?.code, "JSON:", JSON.stringify(err))
+      if (process.env.NODE_ENV !== "production") console.error("Request error:", err, "message:", err?.message, "details:", err?.details, "hint:", err?.hint, "code:", err?.code, "JSON:", JSON.stringify(err))
       const msg = err?.message || err?.error_description || (typeof err === "string" ? err : JSON.stringify(err))
       alert(msg || (locale === "ar" ? "فشل إرسال الطلب" : "Failed to send request"))
     } finally {
