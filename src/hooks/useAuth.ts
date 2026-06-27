@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { getClient } from "@/lib/supabase/client"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useFavoriteStore } from "@/store/useFavoriteStore"
+import { resolveMetadataRole } from "@/providers/session-provider"
 
 const supabase = getClient()
 
@@ -15,7 +16,7 @@ export function useAuth() {
   const signIn = useCallback(async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
-    const role = data.user?.user_metadata?.role
+    const role = resolveMetadataRole(data.user)
     if (role === "OFFICE") {
       router.push("/dashboard")
     } else {

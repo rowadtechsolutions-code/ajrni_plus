@@ -5,15 +5,23 @@ import { getClient } from "@/lib/supabase/client"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useFavoriteStore } from "@/store/useFavoriteStore"
 
-function enrichProfile(session: any, profile: any) {
-  return {
-    ...(profile || {}),
-    role: profile?.role || session?.user?.user_metadata?.role || null,
-  }
+export function resolveMetadataRole(user: { user_metadata?: Record<string, any> } | null | undefined): string | null {
+  const role = String(user?.user_metadata?.role ?? "").trim().toUpperCase()
+  if (role === "OFFICE") return "OFFICE"
+  if (role === "CUSTOMER" || role === "USER") return "CUSTOMER"
+
+  const accountType = String(user?.user_metadata?.account_type ?? "").trim().toLowerCase()
+  if (accountType === "office") return "OFFICE"
+  if (accountType === "user") return "CUSTOMER"
+
+  return null
 }
 
-function getProfileTable(role?: string) {
-  return role === "OFFICE" ? "Offices" : "Users"
+function enrichProfile(session: any, profile: any, resolvedRole?: string | null) {
+  return {
+    ...(profile || {}),
+    role: resolvedRole || profile?.role || session?.user?.user_metadata?.role || null,
+  }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -22,14 +30,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = getClient()
 
   const fetchProfile = async (session: any) => {
-    const role = session?.user?.user_metadata?.role
-    const table = getProfileTable(role)
-    const { data: profile } = await supabase
-      .from(table)
-      .select("*")
-      .eq("id", session.user.id)
-      .single()
-    setSession(session, session.user, enrichProfile(session, profile))
+    let role = resolveMetadataRole(session.user)
+    let profile: any = null
+
+    if (role === "OFFICE") {
+      const { data } = await supabase.from("Offices").select("*").eq("id", session.user.id).single()
+      profile = data
+    } else if (role === "CUSTOMER") {
+      const { data } = await supabase.from("Users").select("*").eq("id", session.user.id).single()
+      profile = data
+    } else {
+      const { data: office } = await supabase.from("Offices").select("*").eq("id", session.user.id).single()
+      if (office) {
+        profile = office
+        role = "OFFICE"
+      } else {
+        const { data: user } = await supabase.from("Users").select("*").eq("id", session.user.id).single()
+        if (user) {
+          profile = user
+          role = "CUSTOMER"
+        }
+      }
+    }
+
+    setSession(session, session.user, enrichProfile(session, profile, role))
     loadFavorites(session.user.id)
   }
 
