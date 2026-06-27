@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { Heart, Share2, Phone, MessageCircle, MapPin, Users, Gauge, Fuel, Calendar, ArrowLeft } from "lucide-react"
-import { motion } from "framer-motion"
+import { Heart, Share2, Phone, MessageCircle, MapPin, Users, Gauge, Fuel, Calendar, ArrowLeft, X, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useFavoriteStore } from "@/store/useFavoriteStore"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -30,7 +30,41 @@ export default function CarDetailsPage() {
   })
 
   const [selectedImage, setSelectedImage] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
   const wishlisted = car ? isFavorited(car.id) : false
+
+  const fallbackImg = "/placeholder.svg"
+  const validImages = (() => {
+    if (!car) return [fallbackImg]
+    const c = car as CarType
+    const raw = [
+      ...(Array.isArray(c.images) ? c.images : []),
+      ...(c.image ? [c.image] : []),
+    ]
+    const unique = Array.from(new Set(raw.filter((url): url is string => Boolean(url && url.trim()))))
+    return unique.length > 0 ? unique : [fallbackImg]
+  })()
+
+  const goNext = useCallback(() => {
+    setLightboxIndex((prev) => (prev + 1) % validImages.length)
+  }, [validImages.length])
+
+  const goPrev = useCallback(() => {
+    setLightboxIndex((prev) => (prev - 1 + validImages.length) % validImages.length)
+  }, [validImages.length])
+
+  useEffect(() => {
+    if (!lightboxOpen) return
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxOpen(false)
+      if (e.key === "ArrowRight") goNext()
+      if (e.key === "ArrowLeft") goPrev()
+    }
+    window.addEventListener("keydown", handleKey)
+    return () => window.removeEventListener("keydown", handleKey)
+  }, [lightboxOpen, goNext, goPrev])
 
   if (isLoading) {
     return (
@@ -59,19 +93,26 @@ export default function CarDetailsPage() {
 
   const c = car as CarType
   const office = c.office
-  const carImages = c.images?.length ? c.images : c.image ? [c.image] : ["/placeholder.svg"]
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
       <Link href="/cars" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-4"><ArrowLeft className="w-4 h-4" />{locale === "ar" ? "عودة للنتائج" : "Back to results"}</Link>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className="relative rounded-2xl overflow-hidden bg-muted h-[300px] md:h-[400px]">
-            <img src={carImages[selectedImage]} alt={c.name} className="w-full h-full object-cover" fetchPriority="high" />
+          <div className="relative rounded-2xl overflow-hidden bg-muted h-[300px] md:h-[400px] cursor-pointer" onClick={() => { setLightboxIndex(selectedImage); setLightboxOpen(true) }}>
+            <img
+              src={failedImages.has(validImages[selectedImage]) ? fallbackImg : validImages[selectedImage]}
+              alt={c.name}
+              className="w-full h-full object-cover"
+              fetchPriority="high"
+              onError={() => setFailedImages((prev) => new Set(prev).add(validImages[selectedImage]))}
+            />
             <div className="absolute top-3 left-3 flex gap-2">
-              <button onClick={() => { if (user?.id) toggleFavorite(user.id, c.id) }} className="p-2 rounded-full bg-white/80 hover:bg-white"><Heart className={cn("w-5 h-5", wishlisted ? "fill-error text-error" : "")} /></button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); if (user?.id) toggleFavorite(user.id, c.id) }} className="p-2 rounded-full bg-white/80 hover:bg-white"><Heart className={cn("w-5 h-5", wishlisted ? "fill-error text-error" : "")} /></button>
               <button
-                onClick={async () => {
+                type="button"
+                onClick={async (e) => {
+                  e.stopPropagation()
                   const url = window.location.href
                   if (navigator.share) {
                     try { await navigator.share({ title: c.name, url }) } catch {}
@@ -96,11 +137,17 @@ export default function CarDetailsPage() {
               </button>
             </div>
           </div>
-          {carImages.length > 1 && (
-            <div className="flex gap-2">
-              {carImages.map((img, i) => (
-                <button key={i} onClick={() => setSelectedImage(i)} className={`relative w-24 h-16 rounded-xl overflow-hidden border-2 transition-all ${selectedImage === i ? "border-secondary ring-2 ring-secondary/30" : "border-gray-200 opacity-70 hover:opacity-100"}`}>
-                  <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+          {validImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {validImages.map((img, i) => (
+                <button key={`${img}-${i}`} onClick={() => { setSelectedImage(i); setLightboxIndex(i); setLightboxOpen(true) }} className={`relative shrink-0 w-24 h-16 rounded-xl overflow-hidden border-2 transition-all ${selectedImage === i ? "border-secondary ring-2 ring-secondary/30" : "border-gray-200 opacity-70 hover:opacity-100"}`}>
+                  <img
+                    src={failedImages.has(img) ? fallbackImg : img}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={() => setFailedImages((prev) => new Set(prev).add(img))}
+                  />
                 </button>
               ))}
             </div>
@@ -186,6 +233,60 @@ export default function CarDetailsPage() {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {lightboxOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <button onClick={() => setLightboxOpen(false)} className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+              <X className="w-6 h-6" />
+            </button>
+            {validImages.length > 1 && (
+              <>
+                <button onClick={(e) => { e.stopPropagation(); goPrev() }} className="absolute left-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); goNext() }} className="absolute right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+            <motion.div
+              key={lightboxIndex}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.2 }}
+              className="max-w-4xl max-h-[85vh] w-full h-full flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {failedImages.has(validImages[lightboxIndex]) ? (
+                <div className="flex flex-col items-center gap-2 text-white/60">
+                  <AlertCircle className="w-12 h-12" />
+                  <span className="text-sm">{locale === "ar" ? "فشل تحميل الصورة" : "Failed to load image"}</span>
+                </div>
+              ) : (
+                <img
+                  src={validImages[lightboxIndex]}
+                  alt={c.name}
+                  className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg"
+                  onError={() => setFailedImages((prev) => new Set(prev).add(validImages[lightboxIndex]))}
+                />
+              )}
+            </motion.div>
+            {validImages.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/10 text-white text-sm">
+                {lightboxIndex + 1} / {validImages.length}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
