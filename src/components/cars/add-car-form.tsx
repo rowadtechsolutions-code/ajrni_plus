@@ -83,14 +83,6 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
         }
       }
 
-      for (const oldUrl of oldImageUrls) {
-        if (!imageUrls.includes(oldUrl)) {
-          await storageService.deleteCarImageByUrl(oldUrl)
-        }
-      }
-      setImagePreviews([null, null, null])
-      setImageFiles([null, null, null])
-
       const payload: Record<string, any> = {
         name: s1.name,
         brand: s1.brand,
@@ -111,11 +103,18 @@ export function AddCarForm({ officeId, editingCar, onClose }: AddCarFormProps) {
 
       if (editingCar) {
         await carService.update(editingCar.id, payload)
+        for (const oldUrl of oldImageUrls) {
+          if (!imageUrls.includes(oldUrl)) {
+            await storageService.deleteCarImageByUrl(oldUrl)
+          }
+        }
       } else {
         payload.owner_id = ownerId
         payload.office_id = officeId
         await carService.create(payload)
       }
+      setImagePreviews([null, null, null])
+      setImageFiles([null, null, null])
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-office-cars"] })

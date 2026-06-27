@@ -105,6 +105,10 @@ const BUCKET = "cars"
 export const storageService = {
   async uploadCarImage(file: File, path: string) {
     const compressed = await compressImage(file)
+    const maxImageSizeInBytes = 2 * 1024 * 1024
+    if (compressed.size > maxImageSizeInBytes) {
+      throw new Error("حجم الصورة كبير جدًا حتى بعد الضغط. يرجى اختيار صورة أخرى بحجم أقل من 2 ميجابايت.")
+    }
     const uploadPath = path.replace(/\.[^.]+$/, ".webp")
     const { data, error } = await supabase.storage.from(BUCKET).upload(uploadPath, compressed, { upsert: true, cacheControl: "31536000" })
     if (error) throw new Error(error.message || JSON.stringify(error))
