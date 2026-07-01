@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useTranslation } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { NotificationBell } from "@/components/notifications/notification-bell"
 
 const navItems = [
   { href: "/", labelKey: "nav.home" },
@@ -90,6 +91,7 @@ export function Header() {
                   <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse" />
                 ) : isAuthenticated ? (
                   <>
+                    {profile?.role !== "CUSTOMER" && <NotificationBell />}
                     {profile?.role === "OFFICE" && (
                       <Link href="/dashboard" className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-gray-100 transition-all duration-200" aria-label={locale === "ar" ? "لوحة التحكم" : "Dashboard"}>
                         <LayoutDashboard className="w-4 h-4" />

@@ -3,18 +3,20 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Car, TrendingUp, User, LogOut, MessageCircle } from "lucide-react"
+import { Car, TrendingUp, User, LogOut, MessageCircle, Bell } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 import { useAuth } from "@/hooks/useAuth"
 import { officeService, bookingRequestService } from "@/lib/supabase/services"
+import { notificationService } from "@/lib/supabase/notifications"
 
 const navItems = [
   { href: "/dashboard/cars", icon: Car, label: "dashboard.my_cars" },
   { href: "/dashboard/requests", icon: MessageCircle, label: "dashboard.requests", badge: true },
   { href: "/dashboard/analytics", icon: TrendingUp, label: "dashboard.analytics" },
+  { href: "/dashboard/notifications", icon: Bell, label: "dashboard.notifications", badge: true },
   { href: "/dashboard/profile", icon: User, label: "dashboard.profile" },
 ]
 
@@ -39,6 +41,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     refetchInterval: 30000,
   })
 
+  const { data: notificationUnreadCount = 0 } = useQuery({
+    queryKey: ["unread-notifications", user?.id],
+    queryFn: () => notificationService.getUnreadCount(user!.id),
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+  })
+
   return (
     <div className="flex min-h-[80vh]">
         <aside className="hidden lg:block w-64 border-l border-border bg-white p-4">
@@ -51,12 +60,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href
+            const badgeCount = item.href === "/dashboard/requests" ? unviewedCount : item.href === "/dashboard/notifications" ? notificationUnreadCount : 0
             return (
               <Link key={item.href} href={item.href} className={cn("flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all", isActive ? "bg-secondary/10 text-secondary" : "text-muted-foreground hover:bg-muted")}>
                 <item.icon className="w-4 h-4" />
                 {t(item.label)}
-                {item.badge && unviewedCount > 0 && (
-                  <span className="mr-auto bg-error text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">{unviewedCount}</span>
+                {item.badge && badgeCount > 0 && (
+                  <span className="mr-auto bg-error text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">{badgeCount > 99 ? "99+" : badgeCount}</span>
                 )}
               </Link>
             )
@@ -74,12 +84,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </span>
           {navItems.map((item) => {
             const isActive = pathname === item.href
+            const badgeCount = item.href === "/dashboard/requests" ? unviewedCount : item.href === "/dashboard/notifications" ? notificationUnreadCount : 0
             return (
               <Link key={item.href} href={item.href} className={cn("flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all", isActive ? "bg-secondary/10 text-secondary" : "text-muted-foreground bg-muted")}>
                 <item.icon className="w-3.5 h-3.5" />
                 {t(item.label)}
-                {item.badge && unviewedCount > 0 && (
-                  <span className="bg-error text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{unviewedCount}</span>
+                {item.badge && badgeCount > 0 && (
+                  <span className="bg-error text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{badgeCount > 99 ? "99+" : badgeCount}</span>
                 )}
               </Link>
             )

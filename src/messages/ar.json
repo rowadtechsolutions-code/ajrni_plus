@@ -220,7 +220,8 @@
     "analytics": "الإحصائيات",
     "profile": "الملف الشخصي",
     "add_car": "إضافة سيارة",
-    "title": "لوحة التحكم"
+    "title": "لوحة التحكم",
+    "notifications": "الإشعارات"
   },
   "common": {
     "loading": "جارٍ التحميل...",
@@ -239,5 +240,19 @@
     "day": "يوم",
     "view_profile": "عرض الملف الشخصي",
     "send_message": "إرسال رسالة"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "no_notifications": "لا توجد إشعارات",
+    "no_notifications_desc": "ستظهر إشعارات حسابك هنا عند وصولها.",
+    "mark_all_read": "تعليم الكل كمقروء",
+    "view_all": "عرض جميع الإشعارات",
+    "unread": "غير مقروء",
+    "unread_count": "لديك {count} إشعار غير مقروء",
+    "load_error": "تعذر تحميل الإشعارات، حاول مرة أخرى",
+    "retry": "إعادة المحاولة",
+    "previous": "السابق",
+    "next": "التالي",
+    "login_required": "يرجى تسجيل الدخول"
   }
 }

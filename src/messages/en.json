@@ -220,7 +220,8 @@
     "analytics": "Analytics",
     "profile": "Profile",
     "add_car": "Add Car",
-    "title": "Dashboard"
+    "title": "Dashboard",
+    "notifications": "Notifications"
   },
   "common": {
     "loading": "Loading...",
@@ -239,5 +240,19 @@
     "day": "day",
     "view_profile": "View Profile",
     "send_message": "Send Message"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "no_notifications": "No notifications",
+    "no_notifications_desc": "Your notifications will appear here.",
+    "mark_all_read": "Mark all as read",
+    "view_all": "View all notifications",
+    "unread": "unread",
+    "unread_count": "You have {count} unread notification(s)",
+    "load_error": "Failed to load notifications, please try again",
+    "retry": "Retry",
+    "previous": "Previous",
+    "next": "Next",
+    "login_required": "Please log in"
   }
 }

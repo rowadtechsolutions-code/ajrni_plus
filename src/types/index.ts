@@ -119,6 +119,19 @@ export interface BookingRequestOfficeType {
   created_at: string
 }
 
+export interface NotificationType {
+  id: string
+  user_id: string
+  title: string
+  body: string
+  type: string
+  reference_id: string | null
+  data: Record<string, any>
+  is_read: boolean
+  read_at: string | null
+  created_at: string
+}
+
 export interface BookingOfferType {
   id: string
   request_id: string
