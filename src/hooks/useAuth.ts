@@ -37,6 +37,18 @@ export function useAuth() {
     city?: string
   }) => {
     const metaName = data.role === "OFFICE" ? data.officeName || data.name || "" : data.name || ""
+
+    if (data.role === "OFFICE" && data.commercialRegistrationNumber) {
+      const { data: existing } = await supabase
+        .from("Offices")
+        .select("id")
+        .eq("commercial_registration_number", data.commercialRegistrationNumber)
+        .maybeSingle()
+      if (existing) {
+        throw new Error("رقم السجل التجاري مسجل مسبقًا، يرجى التواصل مع الدعم.")
+      }
+    }
+
     const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -58,17 +70,27 @@ export function useAuth() {
 
     if (authData?.session) {
       if (data.role === "OFFICE") {
-        const { error: oErr } = await supabase.from("Offices").insert({
-          id: authData.user!.id,
-          office_name: metaName,
-          email: data.email,
-          phone_number: data.phone || "",
-          country: data.country || "",
-          city: data.city || "",
-          is_active: false,
-          commercial_registration_number: data.commercialRegistrationNumber || "",
-        })
-        if (oErr) throw new Error(`Offices insert: ${oErr.message}`)
+        try {
+          const { error: oErr } = await supabase.from("Offices").insert({
+            id: authData.user!.id,
+            office_name: metaName,
+            email: data.email,
+            phone_number: data.phone || "",
+            country: data.country || "",
+            city: data.city || "",
+            is_active: false,
+            commercial_registration_number: data.commercialRegistrationNumber || "",
+          })
+          if (oErr) {
+            if (oErr.code === '23505') {
+              throw new Error("رقم السجل التجاري مسجل مسبقًا، يرجى التواصل مع الدعم.")
+            }
+            throw new Error(`Offices insert: ${oErr.message}`)
+          }
+        } catch (err) {
+          await supabase.auth.signOut()
+          throw err
+        }
       } else {
         const { error: uErr } = await supabase.from("Users").insert({
           id: authData.user!.id,
