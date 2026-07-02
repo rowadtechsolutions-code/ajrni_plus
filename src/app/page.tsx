@@ -57,6 +57,25 @@ const staggerContainer = {
   transition: { staggerChildren: 0.1 } as any,
 }
 
+function fairDistributeCarsByOffice(cars: any[]): any[] {
+  const groups: Record<string, any[]> = {}
+  for (const car of cars) {
+    const key = car.office_id || "__none__"
+    if (!groups[key]) groups[key] = []
+    groups[key].push(car)
+  }
+  const keys = Object.keys(groups)
+  if (keys.length <= 1) return cars
+  const maxLen = Math.max(...keys.map((k) => groups[k].length))
+  const result: any[] = []
+  for (let i = 0; i < maxLen; i++) {
+    for (const key of keys) {
+      if (i < groups[key].length) result.push(groups[key][i])
+    }
+  }
+  return result
+}
+
 export default function HomePage() {
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
@@ -256,7 +275,7 @@ export default function HomePage() {
           </div>
         ) : trendingCars.length > 0 ? (
           <motion.div {...staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {trendingCars.slice(0, 8).map((car, i) => (
+            {(() => { const distributed = fairDistributeCarsByOffice(trendingCars); return distributed.slice(0, 8) })().map((car, i) => (
               <motion.div
                 key={car.id}
                 initial={{ opacity: 0, y: 30 }}
