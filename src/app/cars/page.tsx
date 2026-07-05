@@ -264,7 +264,7 @@ function CarsPageContent() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white p-6 overflow-y-auto"
+              className="absolute top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white p-6 pb-16 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-semibold text-primary flex items-center gap-2">
