@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
-import { Menu, X, User, LogOut, LayoutDashboard, Shield, Globe, Car, BarChart3 } from "lucide-react"
+import { Menu, X, User, LogOut, Globe, Car, BarChart3 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -12,7 +12,6 @@ import { useAuth } from "@/hooks/useAuth"
 import { useTranslation } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { NotificationBell } from "@/components/notifications/notification-bell"
 
 const navItems = [
   { href: "/", labelKey: "nav.home" },
@@ -90,33 +89,20 @@ export function Header() {
                 {loading ? (
                   <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse" />
                 ) : isAuthenticated ? (
-                  <>
-                    {profile?.role !== "CUSTOMER" && <NotificationBell />}
-                    {profile?.role === "OFFICE" && (
-                      <Link href="/dashboard" className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-gray-100 transition-all duration-200" aria-label={locale === "ar" ? "لوحة التحكم" : "Dashboard"}>
-                        <LayoutDashboard className="w-4 h-4" />
-                      </Link>
-                    )}
-                    {profile?.role === "ADMIN" && (
-                      <Link href="/admin" className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-gray-100 transition-all duration-200" aria-label={locale === "ar" ? "لوحة الإدارة" : "Admin"}>
-                        <Shield className="w-4 h-4" />
-                      </Link>
-                    )}
-                    <Link
-                      href={profile?.role === "OFFICE" ? "/dashboard/profile" : "/profile"}
-                      className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
-                    >
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary to-blue-700 text-white flex items-center justify-center text-xs font-bold shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 shrink-0">
-                        {profile?.full_name?.[0] || profile?.name?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
-                      </div>
-                      <div className="text-right leading-tight">
-                        <p className="text-sm font-medium text-primary group-hover:text-secondary transition-colors line-clamp-1">
-                          {profile?.full_name || profile?.name || user?.email?.split("@")[0] || "User"}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground line-clamp-1">{user?.email}</p>
-                      </div>
-                    </Link>
-                  </>
+                  <Link
+                    href={profile?.role === "OFFICE" ? "/dashboard/profile" : "/profile"}
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary to-blue-700 text-white flex items-center justify-center text-xs font-bold shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 shrink-0">
+                      {profile?.full_name?.[0] || profile?.name?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <div className="text-right leading-tight">
+                      <p className="text-sm font-medium text-primary group-hover:text-secondary transition-colors line-clamp-1">
+                        {profile?.full_name || profile?.name || user?.email?.split("@")[0] || "User"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground line-clamp-1">{user?.email}</p>
+                    </div>
+                  </Link>
                 ) : (
                   <>
                     <Link href="/auth/login">
@@ -211,7 +197,7 @@ export function Header() {
               <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
                 {isAuthenticated ? (
                   <div className="space-y-2">
-                    <Link href="/profile" onClick={() => setMobileMenu(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-gray-50 rounded-2xl transition-all duration-200">
+                    <Link href={profile?.role === "OFFICE" ? "/dashboard/profile" : "/profile"} onClick={() => setMobileMenu(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-gray-50 rounded-2xl transition-all duration-200">
                       <User className="w-4 h-4" />
                       {t("nav.profile")}
                     </Link>

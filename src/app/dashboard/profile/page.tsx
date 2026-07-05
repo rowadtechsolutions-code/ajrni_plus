@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Camera, Loader2, Save, CheckCircle2, AlertCircle, Upload, ImageIcon } from "lucide-react"
+import { Camera, Loader2, Save, CheckCircle2, AlertCircle, Upload, ImageIcon, LogOut, Building2, Shield, ChevronLeft, AlertTriangle } from "lucide-react"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
+import { useAuth } from "@/hooks/useAuth"
 import { useTranslation } from "@/lib/i18n"
 import { officeService, officeStorageService } from "@/lib/supabase/services"
 import { gulfCountries, getCitiesByCountryCode } from "@/lib/locations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Modal } from "@/components/ui/modal"
 import { cn } from "@/lib/utils"
 
 export default function DashboardProfilePage() {
@@ -39,6 +41,9 @@ export default function DashboardProfilePage() {
   const [existingCover, setExistingCover] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [successMsg, setSuccessMsg] = useState("")
+  const [showMobileForm, setShowMobileForm] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const { signOut } = useAuth()
 
   const { data: office, isLoading } = useQuery({
     queryKey: ["office-profile", user?.id],
@@ -231,7 +236,71 @@ export default function DashboardProfilePage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <div className="lg:hidden">
+        {!showMobileForm ? (
+          <div>
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 border border-gray-100">
+                  {office?.image ? (
+                    <img src={office.image} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-secondary/20 to-blue-600/20 flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-secondary" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-bold text-primary text-lg leading-snug truncate">{office?.office_name || (locale === "ar" ? "المكتب" : "Office")}</h2>
+                  <p className="text-sm text-muted-foreground truncate mt-0.5">{office?.email}</p>
+                  <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full mt-1.5 ${office?.is_active ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                    {office?.is_active ? (locale === "ar" ? "نشط" : "Active") : (locale === "ar" ? "غير نشط" : "Inactive")}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-2 px-1">
+              <h3 className="text-sm font-semibold text-muted-foreground">{locale === "ar" ? "الحساب" : "Account"}</h3>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden divide-y divide-gray-100">
+              <button onClick={() => setShowMobileForm(true)} className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors active:bg-muted/80 group">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
+                    <Building2 className="w-5 h-5 text-secondary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-primary">{locale === "ar" ? "تعديل بيانات المكتب" : "Edit Office Data"}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{locale === "ar" ? "تحديث معلومات المكتب" : "Update office information"}</p>
+                  </div>
+                </div>
+                <ChevronLeft className="w-4 h-4 text-muted-foreground group-hover:-translate-x-0.5 transition-transform shrink-0" />
+              </button>
+            </div>
+
+            <div className="mt-6 mb-2 px-1">
+              <h3 className="text-sm font-semibold text-muted-foreground">{locale === "ar" ? "إعدادات الحساب" : "Account Settings"}</h3>
+            </div>
+
+            <button onClick={() => setShowLogoutModal(true)} className="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:bg-red-50/50 transition-colors active:bg-red-50/80 group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-error/10 flex items-center justify-center shrink-0 group-hover:bg-error/20 transition-colors">
+                  <LogOut className="w-5 h-5 text-error" />
+                </div>
+                <p className="text-sm font-medium text-error">{locale === "ar" ? "تسجيل الخروج" : "Logout"}</p>
+              </div>
+              <ChevronLeft className="w-4 h-4 text-error/60 group-hover:-translate-x-0.5 transition-transform shrink-0" />
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setShowMobileForm(false)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-4">
+            {locale === "ar" ? "العودة للحساب" : "Back to Account"}
+          </button>
+        )}
+      </div>
+
+      <form onSubmit={handleSubmit} className={!showMobileForm ? 'hidden lg:block' : ''}>
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-6">
           <div className="border-b border-gray-100 pb-6">
             <h3 className="text-sm font-semibold text-primary mb-4">{locale === "ar" ? "صورة الغلاف" : "Cover Image"}</h3>
@@ -441,6 +510,29 @@ export default function DashboardProfilePage() {
           </div>
         </div>
       </form>
+
+      <Modal open={showLogoutModal} onClose={() => setShowLogoutModal(false)}>
+        <div className="text-center py-2">
+          <div className="w-14 h-14 rounded-full bg-error/10 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-7 h-7 text-error" />
+          </div>
+          <p className="text-base font-semibold text-primary mb-1">
+            {locale === "ar" ? "تسجيل الخروج" : "Log out"}
+          </p>
+          <p className="text-sm text-muted-foreground mb-6">
+            {locale === "ar" ? "هل أنت متأكد من تسجيل الخروج؟" : "Are you sure you want to log out?"}
+          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <Button variant="outline" onClick={() => setShowLogoutModal(false)} className="w-full sm:w-auto">
+              {locale === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button variant="danger" onClick={() => { setShowLogoutModal(false); signOut() }} className="w-full sm:w-auto">
+              <LogOut className="w-4 h-4" />
+              {locale === "ar" ? "تسجيل الخروج" : "Log out"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

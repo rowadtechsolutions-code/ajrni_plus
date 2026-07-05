@@ -77,31 +77,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {locale === "ar" ? "تسجيل الخروج" : "Logout"}
         </button>
       </aside>
-      <div className="flex-1 min-w-0">
-        <div className="lg:hidden flex items-center gap-2 p-4 border-b border-border bg-white overflow-x-auto no-scrollbar">
-          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${isActive ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-            {isActive ? (locale === "ar" ? "نشط" : "Active") : (locale === "ar" ? "قيد المراجعة" : "Pending")}
-          </span>
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
-            const badgeCount = item.href === "/dashboard/requests" ? unviewedCount : item.href === "/dashboard/notifications" ? notificationUnreadCount : 0
+      <div className="flex-1 min-w-0 pb-16 lg:pb-0">
+        {children}
+      </div>
+
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border safe-area-bottom">
+        <div className="flex items-center justify-around h-16">
+          {[
+            { href: "/dashboard/cars", icon: Car, label: locale === "ar" ? "سياراتي" : "My Cars" },
+            { href: "/dashboard/requests", icon: MessageCircle, label: locale === "ar" ? "الطلبات" : "Requests", badgeCount: unviewedCount },
+            { href: "/dashboard/notifications", icon: Bell, label: locale === "ar" ? "الإشعارات" : "Notifications", badgeCount: notificationUnreadCount },
+            { href: "/dashboard/profile", icon: User, label: locale === "ar" ? "حسابي" : "Account" },
+          ].map((item) => {
+            const isItemActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
             return (
-              <Link key={item.href} href={item.href} className={cn("flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all", isActive ? "bg-secondary/10 text-secondary" : "text-muted-foreground bg-muted")}>
-                <item.icon className="w-3.5 h-3.5" />
-                {t(item.label)}
-                {item.badge && badgeCount > 0 && (
-                  <span className="bg-error text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{badgeCount > 99 ? "99+" : badgeCount}</span>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors",
+                  isItemActive ? "text-secondary" : "text-muted-foreground"
                 )}
+              >
+                <div className="relative">
+                  <item.icon className="w-5 h-5" />
+                  {(item as any).badgeCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-error text-white text-[8px] font-bold px-1 rounded-full min-w-[14px] text-center leading-[14px]">
+                      {(item as any).badgeCount > 99 ? "99+" : (item as any).badgeCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             )
           })}
-          <button onClick={() => setShowLogoutModal(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap text-error bg-muted hover:bg-red-50 transition-all">
-            <LogOut className="w-3.5 h-3.5" />
-            {locale === "ar" ? "تسجيل الخروج" : "Logout"}
-          </button>
         </div>
-        {children}
-      </div>
+      </nav>
 
       {showLogoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowLogoutModal(false)}>

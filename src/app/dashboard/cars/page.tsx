@@ -62,55 +62,86 @@ export default function DashboardCarsPage() {
         </div>
         <Button onClick={() => { setEditingCar(null); setShowAddModal(true) }}><Plus className="w-4 h-4 ml-2" />{t("dashboard.add_car")}</Button>
       </div>
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground animate-pulse">{locale === "ar" ? "جاري التحميل..." : "Loading..."}</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-right p-3 font-medium text-muted-foreground">{locale === "ar" ? "السيارة" : "Car"}</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">{t("cars.price")}</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">{locale === "ar" ? "الحالة" : "Status"}</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">{locale === "ar" ? "الصور" : "Images"}</th>
-                  <th className="p-3"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {(cars as CarType[]).map((car) => (
-                  <tr key={car.id} className="border-b border-border hover:bg-muted/50">
-                    <td className="p-3">
-                      <div className="flex items-center gap-3">
-                        {car.images?.length ? <img src={car.images[0]} alt="" className="w-10 h-10 rounded-xl object-cover" loading="lazy" /> : car.image && <img src={car.image} alt="" className="w-10 h-10 rounded-xl object-cover" loading="lazy" />}
-                        <div>
-                          <p className="font-medium">{car.name}</p>
-                          <p className="text-xs text-muted-foreground">{car.brand} {car.year}</p>
-                        </div>
+          <>
+            <div className="lg:hidden space-y-4">
+              {(cars as CarType[]).map((car) => (
+                <div key={car.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+                  <div className="flex gap-3">
+                    {car.images?.length ? <img src={car.images[0]} alt="" className="w-20 h-20 rounded-xl object-cover shrink-0" loading="lazy" /> : car.image && <img src={car.image} alt="" className="w-20 h-20 rounded-xl object-cover shrink-0" loading="lazy" />}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-primary leading-snug">{car.name}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{car.brand} {car.year}</p>
+                      <p className="text-sm font-bold text-secondary mt-1.5">{formatCurrency(Number(car.price || 0), getCurrencyByCountry(car.office?.country).code)} <span className="text-xs font-normal text-muted-foreground">{car.rental_type === "monthly" ? (locale === "ar" ? "شهر" : "/month") : (locale === "ar" ? "يوم" : "/day")}</span></p>
+                      <div className="mt-1.5">
+                        <Badge variant={car.status === "available" ? "success" : car.status === "rented" ? "warning" : "error"}>
+                          {car.status === "available" ? (locale === "ar" ? "متاح" : "Available") : car.status === "rented" ? (locale === "ar" ? "مستأجر" : "Rented") : (locale === "ar" ? "صيانة" : "Maintenance")}
+                        </Badge>
                       </div>
-                    </td>
-                    <td className="p-3 font-semibold text-secondary">
-                      {formatCurrency(Number(car.price || 0), getCurrencyByCountry(car.office?.country).code)} {car.rental_type === "monthly" ? (locale === "ar" ? "شهر" : "/month") : (locale === "ar" ? "يوم" : "/day")}
-                    </td>
-                    <td className="p-3">
-                      <Badge variant={car.status === "available" ? "success" : car.status === "rented" ? "warning" : "error"}>
-                        {car.status === "available" ? (locale === "ar" ? "متاح" : "Available") : car.status === "rented" ? (locale === "ar" ? "مستأجر" : "Rented") : (locale === "ar" ? "صيانة" : "Maintenance")}
-                      </Badge>
-                    </td>
-                    <td className="p-3 text-muted-foreground text-xs">{car.images?.length ? `${car.images.length} ${locale === "ar" ? "صور" : "images"}` : car.image ? "1" : "-"}</td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => openEdit(car)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><Pencil className="w-4 h-4" /></button>
-                        <button onClick={() => setDeleteTarget(car)} className="p-1.5 rounded-lg hover:bg-muted text-error"><Trash2 className="w-4 h-4" /></button>
-                      </div>
-                    </td>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <button onClick={() => openEdit(car)} className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-xl border border-gray-200 text-sm font-medium hover:bg-muted transition-colors">
+                      <Pencil className="w-4 h-4" />
+                      {locale === "ar" ? "تعديل" : "Edit"}
+                    </button>
+                    <button onClick={() => setDeleteTarget(car)} className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-xl border border-red-200 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                      {locale === "ar" ? "حذف" : "Delete"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden lg:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="text-right p-3 font-medium text-muted-foreground">{locale === "ar" ? "السيارة" : "Car"}</th>
+                    <th className="text-right p-3 font-medium text-muted-foreground">{t("cars.price")}</th>
+                    <th className="text-right p-3 font-medium text-muted-foreground">{locale === "ar" ? "الحالة" : "Status"}</th>
+                    <th className="text-right p-3 font-medium text-muted-foreground">{locale === "ar" ? "الصور" : "Images"}</th>
+                    <th className="p-3"></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(cars as CarType[]).map((car) => (
+                    <tr key={car.id} className="border-b border-border hover:bg-muted/50">
+                      <td className="p-3">
+                        <div className="flex items-center gap-3">
+                          {car.images?.length ? <img src={car.images[0]} alt="" className="w-10 h-10 rounded-xl object-cover" loading="lazy" /> : car.image && <img src={car.image} alt="" className="w-10 h-10 rounded-xl object-cover" loading="lazy" />}
+                          <div>
+                            <p className="font-medium">{car.name}</p>
+                            <p className="text-xs text-muted-foreground">{car.brand} {car.year}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 font-semibold text-secondary">
+                        {formatCurrency(Number(car.price || 0), getCurrencyByCountry(car.office?.country).code)} {car.rental_type === "monthly" ? (locale === "ar" ? "شهر" : "/month") : (locale === "ar" ? "يوم" : "/day")}
+                      </td>
+                      <td className="p-3">
+                        <Badge variant={car.status === "available" ? "success" : car.status === "rented" ? "warning" : "error"}>
+                          {car.status === "available" ? (locale === "ar" ? "متاح" : "Available") : car.status === "rented" ? (locale === "ar" ? "مستأجر" : "Rented") : (locale === "ar" ? "صيانة" : "Maintenance")}
+                        </Badge>
+                      </td>
+                      <td className="p-3 text-muted-foreground text-xs">{car.images?.length ? `${car.images.length} ${locale === "ar" ? "صور" : "images"}` : car.image ? "1" : "-"}</td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => openEdit(car)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><Pencil className="w-4 h-4" /></button>
+                          <button onClick={() => setDeleteTarget(car)} className="p-1.5 rounded-lg hover:bg-muted text-error"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+          </>
         )}
-      </div>
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} className="max-w-sm">
         <div className="text-center py-4 space-y-4">
           <div className="mx-auto w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
