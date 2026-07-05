@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Search, Heart, User, LayoutDashboard } from "lucide-react"
+import { Home, Search, Heart, User, LayoutDashboard, Building2 } from "lucide-react"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { cn } from "@/lib/utils"
@@ -17,6 +17,7 @@ export function MobileNav() {
   const items = [
     { href: "/", icon: Home, label: locale === "ar" ? "الرئيسية" : "Home" },
     { href: "/cars", icon: Search, label: locale === "ar" ? "بحث" : "Search" },
+    { href: "/offices", icon: Building2, label: locale === "ar" ? "المكاتب" : "Offices" },
     ...(profile?.role === "OFFICE"
       ? [{ href: "/dashboard", icon: LayoutDashboard, label: locale === "ar" ? "لوحة التحكم" : "Dashboard" }]
       : [{ href: "/wishlist", icon: Heart, label: locale === "ar" ? "المفضلة" : "Wishlist" }]
