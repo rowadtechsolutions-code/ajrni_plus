@@ -90,6 +90,14 @@ function CarsPageContent() {
     return 0
   })
 
+  const PAGE_SIZE = 9
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const displayedCars = filteredCars.slice(0, visibleCount)
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [search, filters, countryFilter, cityFilter, sortBy])
+
   const changeCountry = (val: string) => {
     setCountryFilter(val)
     setCityFilter("")
@@ -217,8 +225,15 @@ function CarsPageContent() {
             </div>
           ) : (
             <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredCars.map((car, i) => <CarCard key={car.id} car={car} index={i} />)}
+              {displayedCars.map((car, i) => <CarCard key={car.id} car={car} index={i} />)}
             </motion.div>
+          )}
+          {!isLoading && visibleCount < filteredCars.length && (
+            <div className="flex justify-center mt-8">
+              <Button variant="outline" className="rounded-2xl px-8" onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}>
+                {locale === "ar" ? "عرض المزيد" : "Load More"}
+              </Button>
+            </div>
           )}
           {error && (
             <div className="text-center py-10 text-red-500">

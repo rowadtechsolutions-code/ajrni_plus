@@ -56,6 +56,14 @@ export default function OfficesPage() {
     })
   }, [offices, search, country, city])
 
+  const PAGE_SIZE = 9
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const displayed = filtered.slice(0, visibleCount)
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [search, country, city])
+
   const activeFilters = [search, country, city].filter(Boolean).length > 0
 
   const clearFilters = () => {
@@ -139,71 +147,80 @@ export default function OfficesPage() {
           ))}
         </div>
       ) : filtered.length > 0 ? (
-        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((office, i) => {
-            const countryObj = office.country ? getCountryByCode(office.country) : null
-            const countryName = countryObj ? (locale === "ar" ? countryObj.nameAr : countryObj.nameEn) : office.country
-            return (
-              <motion.div
-                key={office.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                whileHover={{ y: -4 }}
-              >
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col">
-                  <div className="relative h-36 overflow-hidden">
-                    <img
-                      src={office.cover || officeImages[i % officeImages.length]}
-                      alt={office.office_name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                    <div className="absolute bottom-3 right-3">
-                      {office.is_active && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                          <Shield className="w-3 h-3" />
-                          {t("offices_page.verified")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="p-4 space-y-3 flex flex-col flex-1">
-                    <div>
-                      <h3 className="font-semibold text-primary">{office.office_name}</h3>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 shrink-0" />
-                        {[office.city, countryName].filter(Boolean).join(", ")}
-                      </p>
-                    </div>
-                    {office.city && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                        <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-lg">
-                          <MapPin className="w-3.5 h-3.5 text-secondary" />
-                          {office.city}
-                        </span>
+        <>
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {displayed.map((office, i) => {
+              const countryObj = office.country ? getCountryByCode(office.country) : null
+              const countryName = countryObj ? (locale === "ar" ? countryObj.nameAr : countryObj.nameEn) : office.country
+              return (
+                <motion.div
+                  key={office.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  whileHover={{ y: -4 }}
+                >
+                  <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col">
+                    <div className="relative h-36 overflow-hidden">
+                      <img
+                        src={office.cover || officeImages[i % officeImages.length]}
+                        alt={office.office_name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                      <div className="absolute bottom-3 right-3">
+                        {office.is_active && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-secondary/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
+                            <Shield className="w-3 h-3" />
+                            {t("offices_page.verified")}
+                          </span>
+                        )}
                       </div>
-                    )}
-                    <div className="flex items-center gap-2 pt-2 mt-auto">
-                      <Link href={`/offices/${office.id}`} className="flex-1">
-                        <Button size="sm" className="w-full">{t("offices_page.view_office")}</Button>
-                      </Link>
-                      <a
-                        href={`https://wa.me/${formatPhoneNumber(office.phone_number, office.country)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-all"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                      </a>
+                    </div>
+                    <div className="p-4 space-y-3 flex flex-col flex-1">
+                      <div>
+                        <h3 className="font-semibold text-primary">{office.office_name}</h3>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <MapPin className="w-3 h-3 shrink-0" />
+                          {[office.city, countryName].filter(Boolean).join(", ")}
+                        </p>
+                      </div>
+                      {office.city && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                          <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-lg">
+                            <MapPin className="w-3.5 h-3.5 text-secondary" />
+                            {office.city}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 pt-2 mt-auto">
+                        <Link href={`/offices/${office.id}`} className="flex-1">
+                          <Button size="sm" className="w-full">{t("offices_page.view_office")}</Button>
+                        </Link>
+                        <a
+                          href={`https://wa.me/${formatPhoneNumber(office.phone_number, office.country)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-all"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </a>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            )
-          })}
-        </motion.div>
+                </motion.div>
+              )
+            })}
+          </motion.div>
+          {visibleCount < filtered.length && (
+            <div className="flex justify-center mt-8">
+              <Button variant="outline" className="rounded-2xl px-8" onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}>
+                {locale === "ar" ? "عرض المزيد" : "Load More"}
+              </Button>
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-center py-20">
           <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-3" />

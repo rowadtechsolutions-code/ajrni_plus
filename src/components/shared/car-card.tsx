@@ -103,9 +103,13 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
 
             {car.office && (
               <div className="flex items-center gap-2 pt-2 border-t border-gray-50">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-secondary/20 to-blue-600/20 flex items-center justify-center text-[10px] font-bold text-secondary">
-                  {car.office.office_name?.[0] || "O"}
-                </div>
+                {car.office.image ? (
+                  <img src={car.office.image} alt={car.office.office_name || ""} className="w-7 h-7 rounded-lg object-cover" />
+                ) : (
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-secondary/20 to-blue-600/20 flex items-center justify-center text-[10px] font-bold text-secondary">
+                    {car.office.office_name?.[0] || "O"}
+                  </div>
+                )}
                 <span className="text-xs text-muted-foreground flex-1 truncate">
                   {car.office.office_name}
                 </span>
