@@ -166,7 +166,7 @@ export default function DashboardCarsPage() {
           </div>
         </div>
       </Modal>
-      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title={locale === "ar" ? (editingCar ? "تعديل السيارة" : "إضافة سيارة") : editingCar ? "Edit Car" : "Add Car"}>
+      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title={locale === "ar" ? (editingCar ? "تعديل السيارة" : "إضافة سيارة") : editingCar ? "Edit Car" : "Add Car"} className="pb-24">
         {office && <AddCarForm officeId={office.id} editingCar={editingCar} onClose={() => setShowAddModal(false)} />}
       </Modal>
     </div>
