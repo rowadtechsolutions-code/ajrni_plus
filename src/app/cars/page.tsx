@@ -117,6 +117,14 @@ function CarsPageContent() {
         </div>
       )}
       <div>
+        <label className="block text-sm font-medium text-primary mb-2">{locale === "ar" ? "ترتيب حسب" : "Sort By"}</label>
+        <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <option value="newest">{t("cars.newest")}</option>
+          <option value="price_low">{t("cars.price_low")}</option>
+          <option value="price_high">{t("cars.price_high")}</option>
+        </select>
+      </div>
+      <div>
         <label className="block text-sm font-medium text-primary mb-2">{t("cars.brand")}</label>
         <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={filters.brand} onChange={(e) => setFilters({ ...filters, brand: e.target.value })}>
           <option value="">{locale === "ar" ? "الكل" : "All"}</option>
@@ -182,30 +190,11 @@ function CarsPageContent() {
               </p>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-initial">
-                <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={countryFilter} onChange={(e) => changeCountry(e.target.value)}>
-                  <option value="">{locale === "ar" ? "كل الدول" : "All Countries"}</option>
-                  {gulfCountries.map((c) => <option key={c.code} value={c.code}>{locale === "ar" ? c.nameAr : c.nameEn}</option>)}
-                </select>
-              </div>
-              {countryFilter && cities.length > 0 && (
-                <div className="relative flex-1 sm:flex-initial">
-                  <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}>
-                    <option value="">{locale === "ar" ? "كل المدن" : "All Cities"}</option>
-                    {cities.map((c) => <option key={c.nameAr} value={c.nameAr}>{locale === "ar" ? c.nameAr : c.nameEn}</option>)}
-                  </select>
-                </div>
-              )}
-              <div className="relative flex-1 sm:flex-initial">
+              <div className="relative flex-1">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={locale === "ar" ? "بحث..." : "Search..."} className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all pr-10 sm:w-52" />
+                <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={locale === "ar" ? "بحث..." : "Search..."} className="w-full sm:w-80 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all pr-10" />
               </div>
-              <select className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <option value="newest">{t("cars.newest")}</option>
-                <option value="price_low">{t("cars.price_low")}</option>
-                <option value="price_high">{t("cars.price_high")}</option>
-              </select>
-              <button onClick={() => setShowFilters(true)} className="md:hidden inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-900 transition-all hover:bg-gray-50 active:scale-[0.98]">
+              <button onClick={() => setShowFilters(true)} className="md:hidden inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-900 transition-all hover:bg-gray-50 active:scale-[0.98] shrink-0">
                 <SlidersHorizontal className="w-4 h-4" />
               </button>
             </div>
