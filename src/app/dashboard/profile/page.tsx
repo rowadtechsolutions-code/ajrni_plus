@@ -148,10 +148,6 @@ export default function DashboardProfilePage() {
     const errs: Record<string, string> = {}
     if (!form.office_name.trim())
       errs.office_name = locale === "ar" ? "اسم المكتب مطلوب" : "Office name is required"
-    if (!form.email.trim())
-      errs.email = locale === "ar" ? "البريد الإلكتروني مطلوب" : "Email is required"
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      errs.email = locale === "ar" ? "بريد إلكتروني غير صالح" : "Invalid email"
     if (!form.phone_number.trim())
       errs.phone_number = locale === "ar" ? "رقم الهاتف مطلوب" : "Phone number is required"
     if (!form.country)
@@ -167,7 +163,6 @@ export default function DashboardProfilePage() {
       const finalCoverUrl = uploadedCoverUrl || existingCover
       const updates: Record<string, any> = {
         office_name: form.office_name.trim(),
-        email: form.email.trim(),
         phone_number: form.phone_number.trim(),
         country: form.country,
         city: form.city,
@@ -347,8 +342,8 @@ export default function DashboardProfilePage() {
               label={locale === "ar" ? "البريد الإلكتروني" : "Email"}
               type="email"
               value={form.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              error={errors.email}
+              disabled
+              className="bg-gray-50 text-muted-foreground cursor-not-allowed"
             />
             <Input
               id="phone_number"

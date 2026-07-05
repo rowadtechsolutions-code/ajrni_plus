@@ -100,10 +100,6 @@ export default function ProfileEditPage() {
     const errs: Record<string, string> = {}
     if (!form.full_name.trim())
       errs.full_name = locale === "ar" ? "الاسم مطلوب" : "Full name is required"
-    if (!form.email.trim())
-      errs.email = locale === "ar" ? "البريد الإلكتروني مطلوب" : "Email is required"
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      errs.email = locale === "ar" ? "بريد إلكتروني غير صالح" : "Invalid email"
     if (!form.phone_number.trim())
       errs.phone_number = locale === "ar" ? "رقم الهاتف مطلوب" : "Phone number is required"
     if (!form.country)
@@ -117,7 +113,6 @@ export default function ProfileEditPage() {
       if (!user?.id) throw new Error("Not authenticated")
       return userService.updateProfile(user.id, {
         full_name: form.full_name.trim(),
-        email: form.email.trim(),
         phone_number: form.phone_number.trim(),
         country: form.country,
         city: form.city,
@@ -237,8 +232,8 @@ export default function ProfileEditPage() {
                   label={locale === "ar" ? "البريد الإلكتروني" : "Email"}
                   type="email"
                   value={form.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  error={errors.email}
+                  disabled
+                  className="bg-gray-50 text-muted-foreground cursor-not-allowed"
                 />
                 <Input
                   id="phone_number"
