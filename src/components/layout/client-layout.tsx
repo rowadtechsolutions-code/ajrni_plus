@@ -8,7 +8,6 @@ import { QueryProvider } from "@/providers/query-provider"
 import { LocaleProvider } from "@/providers/locale-provider"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { AppDownloadSection } from "@/components/sections/app-download-section"
 import { MobileNav } from "@/components/layout/mobile-nav"
 
 const ContactModal = lazy(() => import("@/components/layout/contact-modal").then((m) => ({ default: m.ContactModal })))
@@ -40,7 +39,6 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             >
               {children}
             </motion.main>
-            <AppDownloadSection />
             <Footer />
             <MobileNav />
           </div>

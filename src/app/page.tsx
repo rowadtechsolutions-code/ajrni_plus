@@ -17,6 +17,7 @@ import { Modal } from "@/components/ui/modal"
 import { ContactModal } from "@/components/layout/contact-modal"
 import { CarRequestModal } from "@/components/shared/car-request-modal"
 import { CustomCarRequestModal } from "@/components/shared/custom-car-request-modal"
+import { AppDownloadSection } from "@/components/sections/app-download-section"
 
 const popularSearches = [
   { city: "الرياض", cityEn: "Riyadh", country: "السعودية", countryEn: "KSA" },
@@ -590,6 +591,8 @@ export default function HomePage() {
           </div>
         </motion.div>
       </section>
+
+      <AppDownloadSection />
 
       <CustomCarRequestModal open={showCustomRequest} onClose={() => setShowCustomRequest(false)} />
       <ContactModal open={showContact} onClose={() => setShowContact(false)} />

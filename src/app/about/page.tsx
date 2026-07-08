@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Shield, Eye, Search, MessageCircle, Car, Zap, Building2, MapPin, Users, Star, Headphones } from "lucide-react"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
+import { AppDownloadSection } from "@/components/sections/app-download-section"
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -173,6 +174,8 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <AppDownloadSection />
     </div>
   )
 }
