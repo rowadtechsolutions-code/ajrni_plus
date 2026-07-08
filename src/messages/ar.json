@@ -241,6 +241,12 @@
     "view_profile": "عرض الملف الشخصي",
     "send_message": "إرسال رسالة"
   },
+  "app_download": {
+    "title": "حمّل تطبيق أجرني بلس",
+    "description": "استأجر سيارتك بسهولة من مكاتب موثوقة في الخليج",
+    "app_store": "حمّله من App Store",
+    "google_play": "قريبًا على Google Play"
+  },
   "notifications": {
     "title": "الإشعارات",
     "no_notifications": "لا توجد إشعارات",

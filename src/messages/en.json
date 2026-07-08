@@ -241,6 +241,12 @@
     "view_profile": "View Profile",
     "send_message": "Send Message"
   },
+  "app_download": {
+    "title": "Download Ajrni Plus App",
+    "description": "Rent your car easily from trusted offices across the Gulf",
+    "app_store": "Download on the App Store",
+    "google_play": "Coming soon on Google Play"
+  },
   "notifications": {
     "title": "Notifications",
     "no_notifications": "No notifications",
