@@ -25,6 +25,20 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "أجرني بلس",
     locale: "ar_SA",
+    images: [
+      {
+        url: "/images/app/og_image.png",
+        width: 1200,
+        height: 630,
+        alt: "أجرني بلس | Ajrni Plus",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "أجرني بلس | Ajrni Plus",
+    description: "منصة تأجير السيارات في الخليج — احجز سيارة من مكاتب تأجير موثوقة",
+    images: ["/images/app/og_image.png"],
   },
   other: {
     "google-site-verification": "8-6VslBVgCbKC0O5bwi90HijXc3XTGWkN1_mTssQpMw",
