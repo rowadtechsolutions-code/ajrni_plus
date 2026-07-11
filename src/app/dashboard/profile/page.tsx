@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/useAuthStore"
 import { useAuth } from "@/hooks/useAuth"
 import { useTranslation } from "@/lib/i18n"
 import { officeService, officeStorageService } from "@/lib/supabase/services"
-import { gulfCountries, getCitiesByCountryCode } from "@/lib/locations"
+import { useCountries, useCities } from "@/hooks/useLocations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Modal } from "@/components/ui/modal"
@@ -67,7 +67,8 @@ export default function DashboardProfilePage() {
     }
   }, [office])
 
-  const cities = form.country ? getCitiesByCountryCode(form.country) : []
+  const { data: countries = [], isLoading: countriesLoading } = useCountries()
+  const { data: cities = [], isLoading: citiesLoading } = useCities(form.country)
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -427,17 +428,26 @@ export default function DashboardProfilePage() {
                 {locale === "ar" ? "الدولة" : "Country"}
               </label>
               <select
+                dir={locale === "ar" ? "rtl" : "ltr"}
                 className={cn(
-                  "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20",
-                  errors.country && "border-error"
+                  "w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-no-repeat",
+                  locale === "ar" ? "pl-10" : "pr-10",
+                  errors.country && "border-error",
+                  countriesLoading && "opacity-60 cursor-not-allowed"
                 )}
+                style={{ backgroundPosition: locale === "ar" ? "left 12px center" : "right 12px center", textAlign: locale === "ar" ? "right" : "left" }}
                 value={form.country}
                 onChange={(e) => handleChange("country", e.target.value)}
+                disabled={countriesLoading}
               >
-                <option value="">
-                  {locale === "ar" ? "اختر الدولة" : "Select country"}
-                </option>
-                {gulfCountries.map((c) => (
+                {countriesLoading ? (
+                  <option value="">جاري التحميل...</option>
+                ) : (
+                  <option value="">
+                    {locale === "ar" ? "اختر الدولة" : "Select country"}
+                  </option>
+                )}
+                {!countriesLoading && countries.map((c) => (
                   <option key={c.code} value={c.code}>
                     {locale === "ar" ? c.nameAr : c.nameEn}
                   </option>
@@ -452,15 +462,25 @@ export default function DashboardProfilePage() {
                 {locale === "ar" ? "المدينة" : "City"}
               </label>
               <select
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                dir={locale === "ar" ? "rtl" : "ltr"}
+                className={cn(
+                  "w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-no-repeat",
+                  locale === "ar" ? "pl-10" : "pr-10",
+                  citiesLoading && "opacity-60 cursor-not-allowed"
+                )}
+                style={{ backgroundPosition: locale === "ar" ? "left 12px center" : "right 12px center", textAlign: locale === "ar" ? "right" : "left" }}
                 value={form.city}
                 onChange={(e) => handleChange("city", e.target.value)}
-                disabled={!form.country}
+                disabled={!form.country || citiesLoading}
               >
-                <option value="">
-                  {locale === "ar" ? "اختر المدينة" : "Select city"}
-                </option>
-                {cities.map((c) => (
+                {citiesLoading ? (
+                  <option value="">جاري التحميل...</option>
+                ) : (
+                  <option value="">
+                    {locale === "ar" ? "اختر المدينة" : "Select city"}
+                  </option>
+                )}
+                {!citiesLoading && cities.map((c) => (
                   <option key={c.nameAr} value={c.nameAr}>
                     {locale === "ar" ? c.nameAr : c.nameEn}
                   </option>

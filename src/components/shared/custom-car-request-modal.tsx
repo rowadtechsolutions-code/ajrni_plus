@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
-import { gulfCountries } from "@/lib/locations"
+import { useCountries, useCities } from "@/hooks/useLocations"
 import { brands, brandModels } from "@/lib/brands"
 import { bookingRequestService } from "@/lib/supabase/services"
 
@@ -49,7 +49,8 @@ export function CustomCarRequestModal({ open, onClose }: CustomCarRequestModalPr
     notes: "",
   })
 
-  const cities = form.country ? (gulfCountries.find((c) => c.code === form.country)?.cities || []) : []
+  const { data: countries = [], isLoading: countriesLoading } = useCountries()
+  const { data: cities = [], isLoading: citiesLoading } = useCities(form.country)
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -147,9 +148,13 @@ export function CustomCarRequestModal({ open, onClose }: CustomCarRequestModalPr
             <Input id="phone" label={locale === "ar" ? "رقم الجوال" : "Phone"} value={profile?.phone_number || ""} disabled />
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-primary">{requiredLabelJSX(locale === "ar" ? "الدولة" : "Country")}</label>
-              <select value={form.country} onChange={(e) => { setErrors(p => ({ ...p, country: "" })); updateField("country", e.target.value) }} className={`w-full rounded-xl border ${errors.country ? "border-error ring-2 ring-error/20" : "border-gray-200"} bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}>
-                <option value="">{locale === "ar" ? "اختر الدولة" : "Select country"}</option>
-                {gulfCountries.map((c) => (
+              <select dir={locale === "ar" ? "rtl" : "ltr"} value={form.country} onChange={(e) => { setErrors(p => ({ ...p, country: "" })); updateField("country", e.target.value) }} disabled={countriesLoading} className={`w-full rounded-xl border ${errors.country ? "border-error ring-2 ring-error/20" : "border-gray-200"} px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none disabled:opacity-60 disabled:cursor-not-allowed bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-no-repeat ${locale === "ar" ? "pl-10" : "pr-10"}`} style={{ backgroundPosition: locale === "ar" ? "left 12px center" : "right 12px center", textAlign: locale === "ar" ? "right" : "left" }}>
+                {countriesLoading ? (
+                  <option value="">{locale === "ar" ? "جاري التحميل..." : "Loading..."}</option>
+                ) : (
+                  <option value="">{locale === "ar" ? "اختر الدولة" : "Select country"}</option>
+                )}
+                {!countriesLoading && countries.map((c) => (
                   <option key={c.code} value={c.code}>{locale === "ar" ? c.nameAr : c.nameEn}</option>
                 ))}
               </select>
@@ -157,9 +162,13 @@ export function CustomCarRequestModal({ open, onClose }: CustomCarRequestModalPr
             </div>
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-primary">{requiredLabelJSX(locale === "ar" ? "المدينة" : "City")}</label>
-              <select value={form.city} onChange={(e) => { setErrors(p => ({ ...p, city: "" })); updateField("city", e.target.value) }} disabled={!form.country} className={`w-full rounded-xl border ${errors.city ? "border-error ring-2 ring-error/20" : "border-gray-200"} bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}>
-                <option value="">{locale === "ar" ? "اختر المدينة" : "Select city"}</option>
-                {cities.map((c) => (
+              <select dir={locale === "ar" ? "rtl" : "ltr"} value={form.city} onChange={(e) => { setErrors(p => ({ ...p, city: "" })); updateField("city", e.target.value) }} disabled={!form.country || citiesLoading} className={`w-full rounded-xl border ${errors.city ? "border-error ring-2 ring-error/20" : "border-gray-200"} px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none disabled:opacity-60 disabled:cursor-not-allowed bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-no-repeat ${locale === "ar" ? "pl-10" : "pr-10"}`} style={{ backgroundPosition: locale === "ar" ? "left 12px center" : "right 12px center", textAlign: locale === "ar" ? "right" : "left" }}>
+                {citiesLoading ? (
+                  <option value="">{locale === "ar" ? "جاري التحميل..." : "Loading..."}</option>
+                ) : (
+                  <option value="">{locale === "ar" ? "اختر المدينة" : "Select city"}</option>
+                )}
+                {!citiesLoading && cities.map((c) => (
                   <option key={c.nameAr} value={c.nameAr}>{locale === "ar" ? c.nameAr : c.nameEn}</option>
                 ))}
               </select>

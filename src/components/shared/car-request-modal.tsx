@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { brands } from "@/lib/brands"
-import { gulfCountries } from "@/lib/locations"
+import { useCountries, useCities } from "@/hooks/useLocations"
 import { getClient } from "@/lib/supabase/client"
 
 const WHATSAPP_NUMBER = "96876791559"
@@ -50,7 +50,8 @@ export function CarRequestModal({ open, onClose }: CarRequestModalProps) {
     notes: "",
   })
 
-  const cities = form.pickupCountry ? (gulfCountries.find((c) => c.code === form.pickupCountry)?.cities || []) : []
+  const { data: countries = [] } = useCountries()
+  const { data: cities = [], isLoading: citiesLoading } = useCities(form.pickupCountry)
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -61,7 +62,7 @@ export function CarRequestModal({ open, onClose }: CarRequestModalProps) {
     e.preventDefault()
     setSending(true)
 
-    const country = gulfCountries.find(c => c.code === form.pickupCountry)
+    const country = countries.find(c => c.code === form.pickupCountry)
     const pickupLocation = form.pickupCity
       ? `${form.pickupCity}${country ? `, ${locale === "ar" ? country.nameAr : country.nameEn}` : ""}`
       : form.pickupCountry || (locale === "ar" ? "غير محدد" : "Not specified")
@@ -162,18 +163,18 @@ export function CarRequestModal({ open, onClose }: CarRequestModalProps) {
           />
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-primary">{locale === "ar" ? "الدولة" : "Country"}</label>
-            <select value={form.pickupCountry} onChange={(e) => updateField("pickupCountry", e.target.value)} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-              <option value="">{locale === "ar" ? "اختر الدولة" : "Select country"}</option>
-              {gulfCountries.map((c) => (
+            <select dir={locale === "ar" ? "rtl" : "ltr"} value={form.pickupCountry} onChange={(e) => updateField("pickupCountry", e.target.value)} disabled={countries.length === 0} className={`w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none disabled:opacity-60 disabled:cursor-not-allowed bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-no-repeat ${locale === "ar" ? "pl-10" : "pr-10"}`} style={{ backgroundPosition: locale === "ar" ? "left 12px center" : "right 12px center", textAlign: locale === "ar" ? "right" : "left" }}>
+              <option value="">{countries.length === 0 ? (locale === "ar" ? "جاري التحميل..." : "Loading...") : (locale === "ar" ? "اختر الدولة" : "Select country")}</option>
+              {countries.map((c) => (
                 <option key={c.code} value={c.code}>{locale === "ar" ? c.nameAr : c.nameEn}</option>
               ))}
             </select>
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-primary">{locale === "ar" ? "المدينة" : "City"}</label>
-            <select value={form.pickupCity} onChange={(e) => updateField("pickupCity", e.target.value)} disabled={!form.pickupCountry} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-              <option value="">{locale === "ar" ? "اختر المدينة" : "Select city"}</option>
-              {cities.map((city) => (
+            <select dir={locale === "ar" ? "rtl" : "ltr"} value={form.pickupCity} onChange={(e) => updateField("pickupCity", e.target.value)} disabled={!form.pickupCountry || citiesLoading} className={`w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 appearance-none disabled:opacity-60 disabled:cursor-not-allowed bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-no-repeat ${locale === "ar" ? "pl-10" : "pr-10"}`} style={{ backgroundPosition: locale === "ar" ? "left 12px center" : "right 12px center", textAlign: locale === "ar" ? "right" : "left" }}>
+              <option value="">{citiesLoading ? (locale === "ar" ? "جاري التحميل..." : "Loading...") : (locale === "ar" ? "اختر المدينة" : "Select city")}</option>
+              {!citiesLoading && cities.map((city) => (
                 <option key={city.nameAr} value={city.nameAr}>{locale === "ar" ? city.nameAr : city.nameEn}</option>
               ))}
             </select>

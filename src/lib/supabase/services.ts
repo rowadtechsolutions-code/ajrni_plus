@@ -426,6 +426,42 @@ export const bookingOfferService = {
   },
 }
 
+export const locationService = {
+  async getCountries() {
+    const supabase = getClient()
+    const { data, error } = await supabase
+      .from("countries")
+      .select("code, name_ar, name_en")
+      .order("sort_order", { ascending: true })
+    if (error) throw error
+    return (data || []).map((c: any) => ({
+      code: c.code,
+      nameAr: c.name_ar,
+      nameEn: c.name_en,
+    }))
+  },
+
+  async getCitiesByCountryCode(countryCode: string) {
+    const supabase = getClient()
+    const { data: country, error: countryError } = await supabase
+      .from("countries")
+      .select("id")
+      .eq("code", countryCode)
+      .single()
+    if (countryError || !country) return []
+    const { data, error } = await supabase
+      .from("cities")
+      .select("name_ar, name_en")
+      .eq("country_id", country.id)
+      .order("sort_order", { ascending: true })
+    if (error) throw error
+    return (data || []).map((c: any) => ({
+      nameAr: c.name_ar,
+      nameEn: c.name_en,
+    }))
+  },
+}
+
 export const bookingService = {
   async getByOffice(officeId: string) {
     const { data, error } = await supabase

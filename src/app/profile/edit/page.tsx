@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/useAuthStore"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 import { userService } from "@/lib/supabase/services"
-import { gulfCountries, getCitiesByCountryCode } from "@/lib/locations"
+import { useCountries, useCities } from "@/hooks/useLocations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
@@ -88,7 +88,8 @@ export default function ProfileEditPage() {
     }
   }, [userData, profile, user])
 
-  const cities = form.country ? getCitiesByCountryCode(form.country) : []
+  const { data: countries = [], isLoading: countriesLoading } = useCountries()
+  const { data: cities = [], isLoading: citiesLoading } = useCities(form.country)
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -153,7 +154,7 @@ export default function ProfileEditPage() {
     )
   }
 
-  const countryOptions = gulfCountries.map((c) => ({
+  const countryOptions = countries.map((c) => ({
     value: c.code,
     label: locale === "ar" ? c.nameAr : c.nameEn,
   }))
@@ -249,6 +250,8 @@ export default function ProfileEditPage() {
                   value={form.country}
                   onChange={(e) => handleChange("country", e.target.value)}
                   error={errors.country}
+                  dir={locale === "ar" ? "rtl" : "ltr"}
+                  loading={countriesLoading}
                   options={countryOptions}
                 />
                 <Select
@@ -257,6 +260,8 @@ export default function ProfileEditPage() {
                   value={form.city}
                   onChange={(e) => handleChange("city", e.target.value)}
                   disabled={!form.country}
+                  dir={locale === "ar" ? "rtl" : "ltr"}
+                  loading={citiesLoading}
                   options={cityOptions}
                 />
               </div>

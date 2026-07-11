@@ -13,7 +13,7 @@ import { carService } from "@/lib/supabase/services"
 import { Button } from "@/components/ui/button"
 import { CarCard } from "@/components/shared/car-card"
 import { brands } from "@/lib/brands"
-import { gulfCountries, getCitiesByCountryCode } from "@/lib/locations"
+import { useCountries, useCities } from "@/hooks/useLocations"
 import { getCurrencyByCountry } from "@/lib/utils"
 import type { CarType } from "@/types"
 
@@ -56,7 +56,8 @@ function CarsPageContent() {
   const [filters, setFilters] = useState({ brand: "", transmission: "", fuel_type: "", minPrice: "", maxPrice: "", seats: "" })
   const [sortBy, setSortBy] = useState("newest")
 
-  const cities = countryFilter ? getCitiesByCountryCode(countryFilter) : []
+  const { data: countries = [], isLoading: countriesLoading } = useCountries()
+  const { data: cities = [], isLoading: citiesLoading } = useCities(countryFilter)
 
   const { data: cars = [], isLoading, error } = useQuery({
     queryKey: ["cars", filters, countryFilter, cityFilter],
@@ -110,17 +111,25 @@ function CarsPageContent() {
     <div className="space-y-5">
       <div>
         <label className="block text-sm font-medium text-primary mb-2">{locale === "ar" ? "الدولة" : "Country"}</label>
-        <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={countryFilter} onChange={(e) => changeCountry(e.target.value)}>
-          <option value="">{locale === "ar" ? "الكل" : "All"}</option>
-          {gulfCountries.map((c) => <option key={c.code} value={c.code}>{locale === "ar" ? c.nameAr : c.nameEn}</option>)}
+        <select dir={locale === "ar" ? "rtl" : "ltr"} className={`w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all appearance-none disabled:opacity-60 disabled:cursor-not-allowed bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-no-repeat ${locale === "ar" ? "pl-10" : "pr-10"}`} style={{ backgroundPosition: locale === "ar" ? "left 12px center" : "right 12px center", textAlign: locale === "ar" ? "right" : "left" }} value={countryFilter} onChange={(e) => changeCountry(e.target.value)} disabled={countriesLoading}>
+          {countriesLoading ? (
+            <option value="">{locale === "ar" ? "جاري التحميل..." : "Loading..."}</option>
+          ) : (
+            <option value="">{locale === "ar" ? "الكل" : "All"}</option>
+          )}
+          {!countriesLoading && countries.map((c) => <option key={c.code} value={c.code}>{locale === "ar" ? c.nameAr : c.nameEn}</option>)}
         </select>
       </div>
-      {countryFilter && cities.length > 0 && (
+      {countryFilter && (
         <div>
           <label className="block text-sm font-medium text-primary mb-2">{locale === "ar" ? "المدينة" : "City"}</label>
-          <select className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}>
-            <option value="">{locale === "ar" ? "الكل" : "All"}</option>
-            {cities.map((c) => <option key={c.nameAr} value={c.nameAr}>{locale === "ar" ? c.nameAr : c.nameEn}</option>)}
+          <select dir={locale === "ar" ? "rtl" : "ltr"} className={`w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all appearance-none disabled:opacity-60 disabled:cursor-not-allowed bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-no-repeat ${locale === "ar" ? "pl-10" : "pr-10"}`} style={{ backgroundPosition: locale === "ar" ? "left 12px center" : "right 12px center", textAlign: locale === "ar" ? "right" : "left" }} value={cityFilter} onChange={(e) => setCityFilter(e.target.value)} disabled={!countryFilter || citiesLoading}>
+            {citiesLoading ? (
+              <option value="">{locale === "ar" ? "جاري التحميل..." : "Loading..."}</option>
+            ) : (
+              <option value="">{locale === "ar" ? "الكل" : "All"}</option>
+            )}
+            {!citiesLoading && cities.map((c) => <option key={c.nameAr} value={c.nameAr}>{locale === "ar" ? c.nameAr : c.nameEn}</option>)}
           </select>
         </div>
       )}

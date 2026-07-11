@@ -11,7 +11,7 @@ import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 import { registerSchema, type RegisterFormData } from "@/lib/validations"
 import { useAuth } from "@/hooks/useAuth"
-import { gulfCountries, getCitiesByCountryCode } from "@/lib/locations"
+import { useCountries, useCities } from "@/hooks/useLocations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
@@ -31,7 +31,8 @@ export default function RegisterPage() {
   })
 
   const selectedCountry = watch("country")
-  const cities = selectedCountry ? getCitiesByCountryCode(selectedCountry) : []
+  const { data: countries = [], isLoading: countriesLoading } = useCountries()
+  const { data: cities = [], isLoading: citiesLoading } = useCities(selectedCountry)
 
   const onSubmit = async (data: RegisterFormData) => {
     setError("")
@@ -78,15 +79,19 @@ export default function RegisterPage() {
             <Select
               id="country"
               label={t("auth.country")}
+              loading={countriesLoading}
               error={errors.country?.message}
-              options={gulfCountries.map((c) => ({ value: c.code, label: locale === "ar" ? c.nameAr : c.nameEn }))}
+              dir={locale === "ar" ? "rtl" : "ltr"}
+              options={countries.map((c) => ({ value: c.code, label: locale === "ar" ? c.nameAr : c.nameEn }))}
               {...register("country", { onChange: () => setValue("city", "") })}
             />
             {selectedCountry && (
               <Select
                 id="city"
                 label={t("auth.city")}
+                loading={citiesLoading}
                 error={errors.city?.message}
+                dir={locale === "ar" ? "rtl" : "ltr"}
                 options={cities.map((c) => ({ value: c.nameAr, label: locale === "ar" ? c.nameAr : c.nameEn }))}
                 {...register("city")}
               />
