@@ -10,7 +10,8 @@ import { bookingRequestService, bookingOfferService } from "@/lib/supabase/servi
 import { getClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
-import { formatPhoneNumber } from "@/lib/utils"
+import { formatPhoneNumber, getCurrencyByCountry } from "@/lib/utils"
+import { CurrencySymbol } from "@/components/shared/currency-symbol"
 import type { BookingRequestType, BookingOfferType } from "@/types"
 
 const supabase = getClient()
@@ -25,6 +26,7 @@ export default function DashboardRequestsPage() {
   const [offerForm, setOfferForm] = useState({ carName: "", carYear: "", pricePerDay: "", totalPrice: "", notes: "" })
   const [offerErrors, setOfferErrors] = useState<Record<string, string>>({})
   const [offerSent, setOfferSent] = useState(false)
+  const requestCurrencyCode = (country?: string | null) => getCurrencyByCountry(country || "").code
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ["office-requests", user?.id],
@@ -126,7 +128,7 @@ export default function DashboardRequestsPage() {
                     <p className="text-xs text-muted-foreground mt-1">{req.car_type}{req.brand ? ` • ${req.brand}` : ""}{req.model ? ` • ${req.model}` : ""}</p>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {req.city && <span className="text-[10px] bg-muted px-2 py-0.5 rounded-lg text-muted-foreground">{req.city}</span>}
-                      {req.budget_per_day && <span className="text-[10px] bg-muted px-2 py-0.5 rounded-lg text-muted-foreground">{req.budget_per_day} {locale === "ar" ? "ريال/يوم" : "/day"}</span>}
+                      {req.budget_per_day && <span className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] bg-muted px-2 py-0.5 rounded-lg text-muted-foreground">{req.budget_per_day} <CurrencySymbol currency={requestCurrencyCode(req.country)} size="compact" />/{locale === "ar" ? "يوم" : "day"}</span>}
                       {req.pickup_date && <span className="text-[10px] bg-muted px-2 py-0.5 rounded-lg text-muted-foreground">{req.pickup_date}{req.return_date ? ` → ${req.return_date}` : ""}</span>}
                     </div>
                   </div>
@@ -167,7 +169,7 @@ export default function DashboardRequestsPage() {
               <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "نوع السيارة" : "Car Type"}</p><p className="font-medium mt-1">{selectedRequest.request.car_type || "-"}</p></div>
               <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الماركة" : "Brand"}</p><p className="font-medium mt-1">{selectedRequest.request.brand || "-"}</p></div>
               <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الموديل" : "Model"}</p><p className="font-medium mt-1">{selectedRequest.request.model || "-"}</p></div>
-              <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الميزانية" : "Budget"}</p><p className="font-medium mt-1">{selectedRequest.request.budget_per_day ? `${selectedRequest.request.budget_per_day}/day` : "-"}</p></div>
+              <div className="bg-muted/30 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الميزانية" : "Budget"}</p><p className="font-medium mt-1">{selectedRequest.request.budget_per_day ? <span className="inline-flex items-center gap-1 whitespace-nowrap">{selectedRequest.request.budget_per_day} <CurrencySymbol currency={requestCurrencyCode(selectedRequest.request.country)} size="compact" />/{locale === "ar" ? "يوم" : "day"}</span> : "-"}</p></div>
             </div>
             {selectedRequest.request.notes && (
               <div className="bg-muted/20 rounded-xl p-3"><p className="text-muted-foreground text-[10px] uppercase tracking-wide mb-1">{locale === "ar" ? "ملاحظات" : "Notes"}</p><p className="text-sm">{selectedRequest.request.notes}</p></div>
@@ -181,8 +183,8 @@ export default function DashboardRequestsPage() {
                       <div>
                         <p className="text-sm font-medium">{offer.car_name || "-"}{offer.car_model ? ` (${offer.car_model})` : ""}</p>
                         <div className="flex gap-2 mt-1">
-                          {offer.price_per_day && <span className="text-xs bg-secondary/10 text-secondary font-semibold px-2 py-0.5 rounded-lg">{offer.price_per_day}/day</span>}
-                          {offer.total_price && <span className="text-xs bg-secondary/10 text-secondary font-semibold px-2 py-0.5 rounded-lg">{locale === "ar" ? "إجمالي" : "Total"}: {offer.total_price}</span>}
+                          {offer.price_per_day && <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs bg-secondary/10 text-secondary font-semibold px-2 py-0.5 rounded-lg">{offer.price_per_day} <CurrencySymbol currency={requestCurrencyCode(selectedRequest.request.country)} size="compact" />/{locale === "ar" ? "يوم" : "day"}</span>}
+                          {offer.total_price && <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs bg-secondary/10 text-secondary font-semibold px-2 py-0.5 rounded-lg">{locale === "ar" ? "إجمالي" : "Total"}: {offer.total_price} <CurrencySymbol currency={requestCurrencyCode(selectedRequest.request.country)} size="compact" /></span>}
                         </div>
                       </div>
                       <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${

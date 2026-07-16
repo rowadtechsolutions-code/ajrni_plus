@@ -34,6 +34,7 @@ import { carService } from "@/lib/supabase/services"
 import { cn, getCurrencyByCountry, openWhatsAppReservation } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { CurrencyAmount } from "@/components/shared/currency-symbol"
 import type { CarType } from "@/types"
 
 const FALLBACK_IMAGE = "__car-details-fallback__"
@@ -139,11 +140,6 @@ export default function CarDetailsPage() {
   const currentCar = car as CarType
   const office = currentCar.office
   const currency = getCurrencyByCountry(office?.country)
-  const priceParts = new Intl.NumberFormat("ar-SA", {
-    style: "currency",
-    currency: currency.code,
-    minimumFractionDigits: 0,
-  }).formatToParts(Number(currentCar.price || 0))
   const selectedImageUrl = validImages[selectedImage] || FALLBACK_IMAGE
   const selectedImageFailed = selectedImageUrl === FALLBACK_IMAGE || failedImages.has(selectedImageUrl)
   const carSubtitle = [currentCar.brand, currentCar.model, currentCar.year].filter(Boolean).join(" · ")
@@ -286,14 +282,7 @@ export default function CarDetailsPage() {
               <div className="min-w-0">
                 <p className="text-xs font-medium text-muted-foreground">{locale === "ar" ? "سعر التأجير" : "Rental price"}</p>
                 <p className="mt-1 whitespace-nowrap text-[clamp(1.5rem,5vw,2rem)] font-bold leading-none text-secondary">
-                  {priceParts.map((part, partIndex) => (
-                    <span
-                      key={`${part.type}-${partIndex}`}
-                      className={part.type === "currency" ? "text-sm font-semibold md:text-[clamp(1.5rem,5vw,2rem)] md:font-bold" : undefined}
-                    >
-                      {part.value}
-                    </span>
-                  ))}
+                  <CurrencyAmount amount={Number(currentCar.price || 0)} currency={currency.code} size="detail" />
                 </p>
               </div>
               <span className="shrink-0 text-sm text-muted-foreground">{rentalUnit}</span>

@@ -7,11 +7,12 @@ import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
 import { carService, officeService } from "@/lib/supabase/services"
-import { formatCurrency, getCurrencyByCountry } from "@/lib/utils"
+import { getCurrencyByCountry } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Modal } from "@/components/ui/modal"
 import { AddCarForm } from "@/components/cars/add-car-form"
+import { CurrencyAmount } from "@/components/shared/currency-symbol"
 import type { CarType } from "@/types"
 
 export default function DashboardCarsPage() {
@@ -92,7 +93,7 @@ export default function DashboardCarsPage() {
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-primary leading-snug">{car.name}</h3>
                           <p className="text-xs text-muted-foreground mt-0.5">{car.brand} {car.year}</p>
-                          <p className="text-sm font-bold text-secondary mt-1.5">{formatCurrency(Number(car.price || 0), getCurrencyByCountry(car.office?.country).code)} <span className="text-xs font-normal text-muted-foreground">{car.rental_type === "monthly" ? (locale === "ar" ? "شهر" : "/month") : (locale === "ar" ? "يوم" : "/day")}</span></p>
+                          <p className="text-sm font-bold text-secondary mt-1.5"><CurrencyAmount amount={Number(car.price || 0)} currency={getCurrencyByCountry(car.office?.country).code} size="compact" /> <span className="text-xs font-normal text-muted-foreground">{car.rental_type === "monthly" ? (locale === "ar" ? "شهر" : "/month") : (locale === "ar" ? "يوم" : "/day")}</span></p>
                           <div className="mt-1.5">
                             <Badge variant={car.status === "available" ? "success" : car.status === "rented" ? "warning" : "error"}>
                               {car.status === "available" ? (locale === "ar" ? "متاح" : "Available") : car.status === "rented" ? (locale === "ar" ? "مستأجر" : "Rented") : (locale === "ar" ? "صيانة" : "Maintenance")}
@@ -138,7 +139,7 @@ export default function DashboardCarsPage() {
                             </div>
                           </td>
                           <td className="p-3 font-semibold text-secondary">
-                            {formatCurrency(Number(car.price || 0), getCurrencyByCountry(car.office?.country).code)} {car.rental_type === "monthly" ? (locale === "ar" ? "شهر" : "/month") : (locale === "ar" ? "يوم" : "/day")}
+                            <CurrencyAmount amount={Number(car.price || 0)} currency={getCurrencyByCountry(car.office?.country).code} size="compact" /> {car.rental_type === "monthly" ? (locale === "ar" ? "شهر" : "/month") : (locale === "ar" ? "يوم" : "/day")}
                           </td>
                           <td className="p-3">
                             <Badge variant={car.status === "available" ? "success" : car.status === "rented" ? "warning" : "error"}>

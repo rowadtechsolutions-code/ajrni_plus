@@ -10,7 +10,8 @@ import { useLocaleStore } from "@/store/useLocaleStore"
 import { useFavoriteStore } from "@/store/useFavoriteStore"
 import { useTranslation } from "@/lib/i18n"
 import { useAuthStore } from "@/store/useAuthStore"
-import { cn, formatCurrency, getCurrencyByCountry, openWhatsAppReservation } from "@/lib/utils"
+import { cn, getCurrencyByCountry, openWhatsAppReservation } from "@/lib/utils"
+import { CurrencyAmount } from "@/components/shared/currency-symbol"
 import type { CarType } from "@/types"
 
 interface CarCardProps {
@@ -332,7 +333,7 @@ export const CarCard = memo(function CarCard({ car, index = 0, eagerImage }: Car
             </div>
             <div className="shrink-0 text-end">
               <p className="whitespace-nowrap text-[clamp(1rem,3.4vw,1.125rem)] font-bold leading-6 text-secondary">
-                {formatCurrency(Number(car.price || 0), currency)}
+                <CurrencyAmount amount={Number(car.price || 0)} currency={currency} size="card" />
               </p>
               <p className="text-[10px] leading-4 text-muted-foreground">
                 {car.rental_type === "monthly" ? (locale === "ar" ? "في الشهر" : "per month") : t("cars.per_day")}

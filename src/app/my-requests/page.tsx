@@ -11,6 +11,7 @@ import { bookingRequestService, bookingOfferService } from "@/lib/supabase/servi
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
 import { getCurrencyByCountry } from "@/lib/utils"
+import { CurrencySymbol } from "@/components/shared/currency-symbol"
 import type { BookingRequestType, BookingOfferType } from "@/types"
 
 export default function MyRequestsPage() {
@@ -46,10 +47,7 @@ export default function MyRequestsPage() {
     }
   }
 
-  const currencySymbol = (country?: string) => {
-    const cur = getCurrencyByCountry(country || "")
-    return cur.symbol
-  }
+  const requestCurrencyCode = (country?: string | null) => getCurrencyByCountry(country || "").code
 
   if (!user) {
     return (
@@ -102,8 +100,8 @@ export default function MyRequestsPage() {
                         </span>
                       )}
                       {req.budget_per_day && (
-                        <span className="inline-flex items-center gap-1">
-                          {req.budget_per_day} {currencySymbol(req.country)}/{locale === "ar" ? "يوم" : "day"}
+                        <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                          {req.budget_per_day} <CurrencySymbol currency={requestCurrencyCode(req.country)} size="compact" />/{locale === "ar" ? "يوم" : "day"}
                         </span>
                       )}
                       {req.pickup_date && (
@@ -119,7 +117,7 @@ export default function MyRequestsPage() {
                             {locale === "ar" ? `تم قبول عرض: ${acceptedOffer.car_name || "سيارة"}` : `Accepted: ${acceptedOffer.car_name || "Car"}`}
                           </span>
                           {acceptedOffer.price_per_day && (
-                            <span className="text-[10px] bg-green-200 text-green-800 font-semibold px-2 py-0.5 rounded-lg">{acceptedOffer.price_per_day} {currencySymbol(req.country)}/{locale === "ar" ? "يوم" : "day"}</span>
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap text-[10px] bg-green-200 text-green-800 font-semibold px-2 py-0.5 rounded-lg">{acceptedOffer.price_per_day} <CurrencySymbol currency={requestCurrencyCode(req.country)} size="compact" />/{locale === "ar" ? "يوم" : "day"}</span>
                           )}
                         </div>
                     )}
@@ -159,7 +157,7 @@ export default function MyRequestsPage() {
               </div>
               <div className="bg-muted/30 rounded-xl p-3">
                 <p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "الميزانية" : "Budget"}</p>
-                <p className="font-semibold mt-1">{selectedRequest.budget_per_day ? `${selectedRequest.budget_per_day}/day` : "-"}</p>
+                <p className="font-semibold mt-1">{selectedRequest.budget_per_day ? <span className="inline-flex items-center gap-1 whitespace-nowrap">{selectedRequest.budget_per_day} <CurrencySymbol currency={requestCurrencyCode(selectedRequest.country)} size="compact" />/{locale === "ar" ? "يوم" : "day"}</span> : "-"}</p>
               </div>
               <div className="bg-muted/30 rounded-xl p-3">
                 <p className="text-muted-foreground text-[10px] uppercase tracking-wide">{locale === "ar" ? "المدينة" : "City"}</p>
@@ -201,13 +199,13 @@ export default function MyRequestsPage() {
                           {offer.car_model && <p className="text-xs text-muted-foreground mt-0.5 mr-5">{offer.car_model}</p>}
                           <div className="flex flex-wrap gap-2 mt-2">
                             {offer.price_per_day && (
-                              <span className="text-xs bg-secondary/10 text-secondary font-semibold px-2.5 py-0.5 rounded-lg">
-                                {offer.price_per_day} {currencySymbol(selectedRequest?.country)}/{locale === "ar" ? "يوم" : "day"}
+                              <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs bg-secondary/10 text-secondary font-semibold px-2.5 py-0.5 rounded-lg">
+                                {offer.price_per_day} <CurrencySymbol currency={requestCurrencyCode(selectedRequest?.country)} size="compact" />/{locale === "ar" ? "يوم" : "day"}
                               </span>
                             )}
                             {offer.total_price && (
-                              <span className="text-xs bg-secondary/10 text-secondary font-semibold px-2.5 py-0.5 rounded-lg">
-                                {locale === "ar" ? "إجمالي" : "Total"}: {offer.total_price}
+                              <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs bg-secondary/10 text-secondary font-semibold px-2.5 py-0.5 rounded-lg">
+                                {locale === "ar" ? "إجمالي" : "Total"}: {offer.total_price} <CurrencySymbol currency={requestCurrencyCode(selectedRequest?.country)} size="compact" />
                               </span>
                             )}
                           </div>

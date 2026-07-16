@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useTranslation } from "@/lib/i18n"
 import { carService } from "@/lib/supabase/services"
-import { formatCurrency, getCurrencyByCountry } from "@/lib/utils"
+import { getCurrencyByCountry } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { CurrencyAmount } from "@/components/shared/currency-symbol"
 import type { CarType } from "@/types"
 
 export default function AdminCarsPage() {
@@ -38,7 +39,7 @@ export default function AdminCarsPage() {
                 <tr key={car.id} className="border-b border-border hover:bg-muted/50">
                   <td className="p-3 font-medium">{car.name}</td>
                   <td className="p-3 text-muted-foreground">{car.office?.office_name || "-"}</td>
-                  <td className="p-3 font-semibold text-secondary">{formatCurrency(Number(car.price || 0), getCurrencyByCountry(car.office?.country).code)} {car.rental_type === "monthly" ? "/شهر" : ""}</td>
+                  <td className="p-3 font-semibold text-secondary"><CurrencyAmount amount={Number(car.price || 0)} currency={getCurrencyByCountry(car.office?.country).code} size="compact" /> {car.rental_type === "monthly" ? "/شهر" : ""}</td>
                   <td className="p-3"><Badge variant={car.status === "available" ? "success" : "warning"}>{car.status === "available" ? (locale === "ar" ? "متاح" : "Available") : (locale === "ar" ? "محجوز" : "Booked")}</Badge></td>
                 </tr>
               ))}
