@@ -3,14 +3,13 @@
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, Calendar, Car, TrendingUp, Star, Shield, Zap, ChevronLeft, ArrowLeft, Sparkles, CheckCircle, Building2, Users, Award, MessageCircle } from "lucide-react"
+import { Search, Calendar, Car, TrendingUp, Star, Shield, Zap, ChevronLeft, ArrowLeft, Sparkles, CheckCircle, Building2, Award, MessageCircle } from "lucide-react"
 import { motion, useScroll, useTransform, useInView } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
 import { useQuery } from "@tanstack/react-query"
 import { officeService, carService } from "@/lib/supabase/services"
-import { formatCurrency, getCurrencyByCountry } from "@/lib/utils"
 import { getCountryByCode } from "@/lib/locations"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
@@ -18,6 +17,9 @@ import { ContactModal } from "@/components/layout/contact-modal"
 import { CarRequestModal } from "@/components/shared/car-request-modal"
 import { CustomCarRequestModal } from "@/components/shared/custom-car-request-modal"
 import { AppDownloadSection } from "@/components/sections/app-download-section"
+import { CarCard } from "@/components/shared/car-card"
+import { OfficeCard } from "@/components/shared/office-card"
+import type { CarType, OfficeType } from "@/types"
 
 const popularSearches = [
   { city: "الرياض", cityEn: "Riyadh", country: "السعودية", countryEn: "KSA" },
@@ -259,7 +261,7 @@ export default function HomePage() {
           </Link>
         </motion.div>
         {carsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse overflow-hidden">
                 <div className="h-44 bg-muted" />
@@ -275,85 +277,9 @@ export default function HomePage() {
             ))}
           </div>
         ) : trendingCars.length > 0 ? (
-          <motion.div {...staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <motion.div {...staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {(() => { const distributed = fairDistributeCarsByOffice(trendingCars); return distributed.slice(0, 8) })().map((car, i) => (
-              <motion.div
-                key={car.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
-                whileHover={{ y: -6 }}
-              >
-                <Link href={`/cars/${car.id}`}>
-                  <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
-                    <div className="relative h-44 overflow-hidden">
-                      <img
-                        src={car.image || "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400"}
-                        alt={car.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                      {car.status === "available" ? (
-                        <div className="absolute top-3 right-3">
-                          <span className="inline-flex items-center rounded-full bg-emerald-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                            {locale === "ar" ? "متاح" : "Available"}
-                          </span>
-                        </div>
-                      ) : car.status === "rented" ? (
-                        <div className="absolute top-3 right-3">
-                          <span className="inline-flex items-center rounded-full bg-amber-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                            {locale === "ar" ? "مؤجرة" : "Rented"}
-                          </span>
-                        </div>
-                      ) : car.status === "maintenance" ? (
-                        <div className="absolute top-3 right-3">
-                          <span className="inline-flex items-center rounded-full bg-red-500/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                            {locale === "ar" ? "صيانة" : "Maintenance"}
-                          </span>
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-primary text-sm leading-snug line-clamp-1">
-                        {car.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
-                        {car.seats && (
-                          <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-lg">
-                            <Users className="w-3 h-3" />
-                            {car.seats} {locale === "ar" ? "مقاعد" : "seats"}
-                          </span>
-                        )}
-                        {car.transmission && (
-                          <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-lg">
-                            <Car className="w-3 h-3" />
-                            {car.transmission === "AUTOMATIC" ? (locale === "ar" ? "أوتوماتيك" : "Automatic") : (locale === "ar" ? "يدوي" : "Manual")}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between mt-4">
-                        <div>
-                          {car.price && (
-                            <>
-                              <span className="text-xl font-bold text-secondary">
-                                {formatCurrency(Number(car.price), getCurrencyByCountry(car.office?.country).code)}
-                              </span>
-                              <span className="text-[10px] text-muted-foreground mr-1">
-                                {car.rental_type === "monthly" ? (locale === "ar" ? "/شهر" : "/month") : (locale === "ar" ? "/يوم" : "/day")}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <Button size="sm" className="rounded-xl shadow-lg shadow-secondary/20">
-                          {locale === "ar" ? "احجز الآن" : "Book Now"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
+              <CarCard key={car.id} car={car as CarType} index={i} eagerImage={false} />
             ))}
           </motion.div>
         ) : (
@@ -412,8 +338,8 @@ export default function HomePage() {
             return (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse overflow-hidden">
-                    <div className="h-36 bg-muted" />
+                  <div key={i} className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm animate-pulse">
+                    <div className="aspect-[16/7] bg-muted" />
                     <div className="p-4 space-y-3">
                       <div className="h-5 bg-muted rounded w-3/4" />
                       <div className="h-4 bg-muted rounded w-1/2" />
@@ -426,55 +352,15 @@ export default function HomePage() {
           }
           if (hasOffices) {
             return (
-              <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {filteredOffices.map((office, i) => (
-                  <motion.div
+                  <OfficeCard
                     key={office.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    whileHover={{ y: -4 }}
-                  >
-                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
-                      <div className="relative h-36 overflow-hidden">
-                        <img src={officeImages[i % officeImages.length]} alt={office.office_name} className="w-full h-full object-cover" loading="lazy" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                        <div className="absolute bottom-3 right-3">
-                          {office.is_active && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-secondary/90 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold text-white shadow-lg">
-                              <Shield className="w-3 h-3" />
-                              {t("offices_page.verified") || (locale === "ar" ? "موثق" : "Verified")}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="p-4 space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-semibold text-primary">{office.office_name}</h3>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                              <MapPin className="w-3 h-3" />
-                              {office.city}, {getCountryByCode(office.country) ? (locale === "ar" ? getCountryByCode(office.country)?.nameAr : getCountryByCode(office.country)?.nameEn) : office.country}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-lg">
-                            <MapPin className="w-3.5 h-3.5 text-secondary" />
-                            {office.city}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 pt-2">
-                          <Link href={`/offices/${office.id}`} className="flex-1">
-                            <Button size="sm" className="w-full">{t("offices_page.view_office") || (locale === "ar" ? "عرض المكتب" : "View Office")}</Button>
-                          </Link>
-                          <a href={`https://wa.me/${office.phone_number?.replace(/\s/g, "")}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-all">
-                            <MessageCircle className="w-4 h-4" />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
+                    office={office as OfficeType}
+                    coverImage={officeImages[i % officeImages.length]}
+                    whatsAppHref={`https://wa.me/${office.phone_number?.replace(/\s/g, "")}`}
+                    index={i}
+                  />
                 ))}
               </motion.div>
             )

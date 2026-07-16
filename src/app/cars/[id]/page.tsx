@@ -1,27 +1,54 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useState, useCallback, useEffect, useMemo } from "react"
+import Image from "next/image"
+import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { Heart, Share2, Phone, MessageCircle, MapPin, Users, Gauge, Fuel, Calendar, ArrowLeft, X, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
+import {
+  AlertCircle,
+  ArrowLeft,
+  Calendar,
+  CarFront,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Fuel,
+  Gauge,
+  Heart,
+  Loader2,
+  MapPin,
+  MessageCircle,
+  Palette,
+  Phone,
+  Share2,
+  Users,
+  X,
+} from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useFavoriteStore } from "@/store/useFavoriteStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useTranslation } from "@/lib/i18n"
 import { carService } from "@/lib/supabase/services"
-import { formatCurrency, cn, getCurrencyByCountry, openWhatsAppReservation } from "@/lib/utils"
+import { cn, getCurrencyByCountry, openWhatsAppReservation } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { CarType } from "@/types"
 
+const FALLBACK_IMAGE = "__car-details-fallback__"
+
 export default function CarDetailsPage() {
   const { id } = useParams<{ id: string }>()
+  const router = useRouter()
   const { locale } = useLocaleStore()
   const { t } = useTranslation(locale)
-  const { isFavorited, toggleFavorite } = useFavoriteStore()
-  const { profile, user } = useAuthStore()
+  const favoriteIds = useFavoriteStore((state) => state.ids)
+  const toggleFavorite = useFavoriteStore((state) => state.toggleFavorite)
+  const favoriteLoading = useFavoriteStore((state) => state.loading)
+  const profile = useAuthStore((state) => state.profile)
+  const user = useAuthStore((state) => state.user)
+  const authLoading = useAuthStore((state) => state.loading)
 
   const { data: car, isLoading } = useQuery({
     queryKey: ["car", id],
@@ -33,34 +60,52 @@ export default function CarDetailsPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
-  const wishlisted = car ? isFavorited(car.id) : false
+  const [failedOfficeImage, setFailedOfficeImage] = useState(false)
+  const [favoritePending, setFavoritePending] = useState(false)
+  const wishlisted = car ? favoriteIds.includes(car.id) : false
+  const favoriteBusy = authLoading || favoriteLoading || favoritePending
 
-  const fallbackImg = "/placeholder.svg"
-  const validImages = (() => {
-    if (!car) return [fallbackImg]
-    const c = car as CarType
+  const validImages = useMemo(() => {
+    if (!car) return [FALLBACK_IMAGE]
+    const currentCar = car as CarType
     const raw = [
-      ...(Array.isArray(c.images) ? c.images : []),
-      ...(c.image ? [c.image] : []),
+      ...(Array.isArray(currentCar.images) ? currentCar.images : []),
+      ...(currentCar.image ? [currentCar.image] : []),
     ]
     const unique = Array.from(new Set(raw.filter((url): url is string => Boolean(url && url.trim()))))
-    return unique.length > 0 ? unique : [fallbackImg]
-  })()
+    return unique.length > 0 ? unique : [FALLBACK_IMAGE]
+  }, [car])
 
   const goNext = useCallback(() => {
-    setLightboxIndex((prev) => (prev + 1) % validImages.length)
+    setLightboxIndex((previous) => (previous + 1) % validImages.length)
   }, [validImages.length])
 
   const goPrev = useCallback(() => {
-    setLightboxIndex((prev) => (prev - 1 + validImages.length) % validImages.length)
+    setLightboxIndex((previous) => (previous - 1 + validImages.length) % validImages.length)
   }, [validImages.length])
+
+  const handleFavorite = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation()
+    if (favoriteBusy) return
+    if (!user?.id) {
+      router.push("/auth/login")
+      return
+    }
+
+    setFavoritePending(true)
+    try {
+      await toggleFavorite(user.id, id)
+    } finally {
+      setFavoritePending(false)
+    }
+  }
 
   useEffect(() => {
     if (!lightboxOpen) return
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLightboxOpen(false)
-      if (e.key === "ArrowRight") goNext()
-      if (e.key === "ArrowLeft") goPrev()
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setLightboxOpen(false)
+      if (event.key === "ArrowRight") goNext()
+      if (event.key === "ArrowLeft") goPrev()
     }
     window.addEventListener("keydown", handleKey)
     return () => window.removeEventListener("keydown", handleKey)
@@ -68,15 +113,15 @@ export default function CarDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 animate-pulse">
-        <div className="h-4 bg-muted rounded w-40 mb-4" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="h-[400px] bg-muted rounded-2xl" />
-            <div className="h-32 bg-muted rounded-2xl" />
-            <div className="h-48 bg-muted rounded-2xl" />
+      <div className="mx-auto w-full max-w-7xl animate-pulse px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+        <div className="mb-4 h-5 w-40 rounded bg-muted" />
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.85fr)] xl:gap-8">
+          <div className="space-y-5">
+            <div className="aspect-[16/10] rounded-xl bg-muted" />
+            <div className="h-28 rounded-xl bg-muted" />
+            <div className="h-52 rounded-xl bg-muted" />
           </div>
-          <div className="h-96 bg-muted rounded-2xl" />
+          <div className="h-96 rounded-xl bg-muted" />
         </div>
       </div>
     )
@@ -84,38 +129,91 @@ export default function CarDetailsPage() {
 
   if (!car) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 text-center">
+      <div className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 lg:px-8">
         <p className="text-muted-foreground">{locale === "ar" ? "السيارة غير موجودة" : "Car not found"}</p>
-        <Link href="/cars" className="text-secondary hover:underline mt-2 inline-block">{locale === "ar" ? "عودة للسيارات" : "Back to cars"}</Link>
+        <Link href="/cars" className="mt-2 inline-block text-secondary hover:underline">{locale === "ar" ? "عودة للسيارات" : "Back to cars"}</Link>
       </div>
     )
   }
 
-  const c = car as CarType
-  const office = c.office
+  const currentCar = car as CarType
+  const office = currentCar.office
+  const currency = getCurrencyByCountry(office?.country)
+  const priceParts = new Intl.NumberFormat("ar-SA", {
+    style: "currency",
+    currency: currency.code,
+    minimumFractionDigits: 0,
+  }).formatToParts(Number(currentCar.price || 0))
+  const selectedImageUrl = validImages[selectedImage] || FALLBACK_IMAGE
+  const selectedImageFailed = selectedImageUrl === FALLBACK_IMAGE || failedImages.has(selectedImageUrl)
+  const carSubtitle = [currentCar.brand, currentCar.model, currentCar.year].filter(Boolean).join(" · ")
+  const rentalUnit = currentCar.rental_type === "monthly"
+    ? locale === "ar" ? "/ شهر" : "/ month"
+    : `/ ${t("cars.per_day")}`
+  const specifications = [
+    { icon: Users, label: locale === "ar" ? "المقاعد" : "Seats", value: currentCar.seats ? `${currentCar.seats}` : "-" },
+    { icon: Gauge, label: locale === "ar" ? "القير" : "Transmission", value: currentCar.transmission === "AUTOMATIC" ? t("cars.automatic") : currentCar.transmission === "MANUAL" ? t("cars.manual") : "-" },
+    { icon: Fuel, label: locale === "ar" ? "الوقود" : "Fuel", value: currentCar.fuel_type === "GASOLINE" ? (locale === "ar" ? "بنزين" : "Gasoline") : currentCar.fuel_type === "DIESEL" ? (locale === "ar" ? "ديزل" : "Diesel") : currentCar.fuel_type === "ELECTRIC" ? (locale === "ar" ? "كهرباء" : "Electric") : currentCar.fuel_type === "HYBRID" ? (locale === "ar" ? "هايبرد" : "Hybrid") : "-" },
+    { icon: Calendar, label: locale === "ar" ? "السنة" : "Year", value: currentCar.year?.toString() || "-" },
+    { icon: Palette, label: locale === "ar" ? "اللون" : "Color", value: currentCar.color || "-" },
+    { icon: Clock3, label: locale === "ar" ? "نوع التأجير" : "Rental Type", value: currentCar.rental_type === "monthly" ? (locale === "ar" ? "شهري" : "Monthly") : (locale === "ar" ? "يومي" : "Daily") },
+  ]
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-      <Link href="/cars" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-4"><ArrowLeft className="w-4 h-4" />{locale === "ar" ? "عودة للنتائج" : "Back to results"}</Link>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="relative rounded-2xl overflow-hidden bg-muted h-[300px] md:h-[400px] cursor-pointer" onClick={() => { setLightboxIndex(selectedImage); setLightboxOpen(true) }}>
-            <img
-              src={failedImages.has(validImages[selectedImage]) ? fallbackImg : validImages[selectedImage]}
-              alt={c.name}
-              className="w-full h-full object-cover"
-              fetchPriority="high"
-              onError={() => setFailedImages((prev) => new Set(prev).add(validImages[selectedImage]))}
-            />
-            <div className="absolute top-3 left-3 flex gap-2">
-              <button type="button" onClick={(e) => { e.stopPropagation(); if (user?.id) toggleFavorite(user.id, c.id) }} className="p-2 rounded-full bg-white/80 hover:bg-white"><Heart className={cn("w-5 h-5", wishlisted ? "fill-error text-error" : "")} /></button>
+    <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+      <Link href="/cars" className="mb-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-sm text-muted-foreground transition-colors [@media(hover:hover)]:hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2">
+        <ArrowLeft className="size-4" aria-hidden="true" />
+        {locale === "ar" ? "عودة للنتائج" : "Back to results"}
+      </Link>
+
+      <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.85fr)] xl:gap-8">
+        <section aria-label={locale === "ar" ? "صور السيارة" : "Car images"} className="min-w-0 space-y-3 lg:col-start-1">
+          <div data-car-details-gallery className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-muted">
+            <button
+              type="button"
+              aria-label={locale === "ar" ? `فتح صورة ${currentCar.name}` : `Open ${currentCar.name} image`}
+              onClick={() => { setLightboxIndex(selectedImage); setLightboxOpen(true) }}
+              className="absolute inset-0 z-0 block size-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-secondary"
+            >
+              {selectedImageFailed ? (
+                <span className="flex size-full items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 text-slate-400">
+                  <CarFront className="size-16" aria-hidden="true" />
+                </span>
+              ) : (
+                <Image
+                  src={selectedImageUrl}
+                  alt={currentCar.name}
+                  fill
+                  loading="eager"
+                  fetchPriority="high"
+                  sizes="(max-width: 1023px) calc(100vw - 2rem), (max-width: 1279px) 62vw, 760px"
+                  className="object-cover"
+                  onError={() => setFailedImages((previous) => new Set(previous).add(selectedImageUrl))}
+                />
+              )}
+              <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/5" />
+            </button>
+
+            <div className="absolute end-3 top-3 z-20 flex items-center gap-2">
               <button
                 type="button"
-                onClick={async (e) => {
-                  e.stopPropagation()
+                onClick={handleFavorite}
+                aria-label={wishlisted ? (locale === "ar" ? "إزالة من المفضلة" : "Remove from favorites") : (locale === "ar" ? "إضافة إلى المفضلة" : "Add to favorites")}
+                aria-pressed={wishlisted}
+                aria-busy={favoriteBusy}
+                disabled={favoriteBusy}
+                className="inline-flex size-11 items-center justify-center rounded-full border border-white/70 bg-white/90 text-slate-600 shadow-sm backdrop-blur-sm transition-[transform,background-color,box-shadow] [@media(hover:hover)]:hover:scale-105 [@media(hover:hover)]:hover:bg-white [@media(hover:hover)]:hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 active:scale-95 disabled:cursor-wait disabled:opacity-75"
+              >
+                {favoriteBusy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Heart className={cn("size-4.5", wishlisted && "fill-error text-error")} aria-hidden="true" />}
+              </button>
+              <button
+                type="button"
+                aria-label={locale === "ar" ? "مشاركة السيارة" : "Share car"}
+                onClick={async (event) => {
+                  event.stopPropagation()
                   const url = window.location.href
                   if (navigator.share) {
-                    try { await navigator.share({ title: c.name, url }) } catch {}
+                    try { await navigator.share({ title: currentCar.name, url }) } catch {}
                   } else {
                     try {
                       await navigator.clipboard.writeText(url)
@@ -131,156 +229,208 @@ export default function CarDetailsPage() {
                     }
                   }
                 }}
-                className="p-2 rounded-full bg-white/80 hover:bg-white"
+                className="inline-flex size-11 items-center justify-center rounded-full border border-white/70 bg-white/90 text-slate-600 shadow-sm backdrop-blur-sm transition-[transform,background-color,box-shadow] [@media(hover:hover)]:hover:scale-105 [@media(hover:hover)]:hover:bg-white [@media(hover:hover)]:hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 active:scale-95"
               >
-                <Share2 className="w-5 h-5" />
+                <Share2 className="size-4.5" aria-hidden="true" />
               </button>
             </div>
           </div>
+
           {validImages.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {validImages.map((img, i) => (
-                <button key={`${img}-${i}`} onClick={() => { setSelectedImage(i); setLightboxIndex(i); setLightboxOpen(true) }} className={`relative shrink-0 w-24 h-16 rounded-xl overflow-hidden border-2 transition-all ${selectedImage === i ? "border-secondary ring-2 ring-secondary/30" : "border-gray-200 opacity-70 hover:opacity-100"}`}>
-                  <img
-                    src={failedImages.has(img) ? fallbackImg : img}
-                    alt=""
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    onError={() => setFailedImages((prev) => new Set(prev).add(img))}
-                  />
-                </button>
-              ))}
+            <div data-car-thumbnails className="flex max-w-full gap-2 overflow-x-auto pb-2 pt-0.5" aria-label={locale === "ar" ? "الصور المصغرة" : "Thumbnails"}>
+              {validImages.map((imageUrl, imageIndex) => {
+                const imageFailed = imageUrl === FALLBACK_IMAGE || failedImages.has(imageUrl)
+                return (
+                  <button
+                    key={`${imageUrl}-${imageIndex}`}
+                    type="button"
+                    aria-label={locale === "ar" ? `فتح الصورة ${imageIndex + 1}` : `Open image ${imageIndex + 1}`}
+                    aria-current={selectedImage === imageIndex ? "true" : undefined}
+                    onClick={() => { setSelectedImage(imageIndex); setLightboxIndex(imageIndex); setLightboxOpen(true) }}
+                    className={cn(
+                      "relative aspect-[3/2] w-24 shrink-0 overflow-hidden rounded-lg border-2 bg-muted transition-[border-color,opacity,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2",
+                      selectedImage === imageIndex ? "border-secondary ring-2 ring-secondary/20" : "border-gray-200 opacity-75 [@media(hover:hover)]:hover:opacity-100"
+                    )}
+                  >
+                    {imageFailed ? (
+                      <span className="flex size-full items-center justify-center text-slate-400"><CarFront className="size-6" aria-hidden="true" /></span>
+                    ) : (
+                      <Image src={imageUrl} alt="" fill loading="lazy" sizes="96px" className="object-cover" onError={() => setFailedImages((previous) => new Set(previous).add(imageUrl))} />
+                    )}
+                  </button>
+                )
+              })}
             </div>
           )}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-            <h1 className="text-2xl font-bold text-primary">{c.name}</h1>
-            <div className="flex items-center gap-2 mt-2">
-              {c.model && <span className="text-sm text-muted-foreground">{c.brand} {c.model} • {c.year}</span>}
+        </section>
+
+        <section aria-labelledby="car-title" className="min-w-0 rounded-t-xl border border-b-0 border-gray-100 bg-white p-4 pb-2 shadow-sm md:rounded-xl md:border-b md:p-5 lg:col-start-1">
+          <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h1 id="car-title" className="text-[clamp(1.5rem,4vw,2rem)] font-bold leading-tight text-primary">{currentCar.name}</h1>
+              {carSubtitle && <p className="mt-1 truncate text-sm text-muted-foreground">{carSubtitle}</p>}
             </div>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-lg font-bold text-secondary">
-                {formatCurrency(Number(c.price || 0), getCurrencyByCountry(office?.country).code)}
-              </span>
-              <span className="text-sm text-muted-foreground">{c.rental_type === "monthly" ? (locale === "ar" ? "/ شهر" : "/ month") : "/ " + t("cars.per_day")}</span>
-              {c.status === "available" ? (
-                <Badge variant="success">{locale === "ar" ? "متاح" : "Available"}</Badge>
-              ) : c.status === "rented" ? (
-                <Badge variant="warning">{locale === "ar" ? "مؤجرة" : "Rented"}</Badge>
-              ) : c.status === "maintenance" ? (
-                <Badge variant="error">{locale === "ar" ? "صيانة" : "Maintenance"}</Badge>
-              ) : null}
-            </div>
+            {currentCar.status === "available" ? (
+              <Badge variant="success">{locale === "ar" ? "متاح" : "Available"}</Badge>
+            ) : currentCar.status === "rented" ? (
+              <Badge variant="warning">{locale === "ar" ? "مؤجرة" : "Rented"}</Badge>
+            ) : currentCar.status === "maintenance" ? (
+              <Badge variant="error">{locale === "ar" ? "صيانة" : "Maintenance"}</Badge>
+            ) : null}
           </div>
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-            <h2 className="font-semibold text-primary mb-4">{t("car_details.specs")}</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { icon: Users, label: locale === "ar" ? "المقاعد" : "Seats", value: c.seats ? `${c.seats}` : "-" },
-                { icon: Gauge, label: locale === "ar" ? "القير" : "Transmission", value: c.transmission === "AUTOMATIC" ? t("cars.automatic") : c.transmission === "MANUAL" ? t("cars.manual") : "-" },
-                { icon: Fuel, label: locale === "ar" ? "الوقود" : "Fuel", value: c.fuel_type === "GASOLINE" ? (locale === "ar" ? "بنزين" : "Gasoline") : c.fuel_type === "DIESEL" ? (locale === "ar" ? "ديزل" : "Diesel") : c.fuel_type === "ELECTRIC" ? (locale === "ar" ? "كهرباء" : "Electric") : c.fuel_type === "HYBRID" ? (locale === "ar" ? "هايبرد" : "Hybrid") : "-" },
-                { icon: Calendar, label: locale === "ar" ? "السنة" : "Year", value: c.year?.toString() || "-" },
-              ].map((spec) => (
-                <div key={spec.label} className="text-center p-3 rounded-xl bg-muted">
-                  <spec.icon className="w-5 h-5 mx-auto text-secondary mb-1" />
-                  <p className="text-xs text-muted-foreground">{spec.label}</p>
-                  <p className="text-sm font-semibold">{spec.value}</p>
-                </div>
-              ))}
+        </section>
+
+        <aside className="contents md:block md:min-w-0 lg:col-start-2 lg:row-start-1 lg:row-span-3 lg:sticky lg:top-24">
+          <div data-booking-card className="contents md:block md:rounded-xl md:border md:border-gray-100 md:bg-white md:p-5 md:shadow-sm">
+            <div className="-mt-5 flex min-w-0 items-end justify-between gap-3 rounded-b-xl border border-t-0 border-gray-100 bg-white px-4 pb-4 pt-1 shadow-sm md:mt-0 md:rounded-none md:border-x-0 md:border-t-0 md:bg-transparent md:px-0 md:pt-0 md:shadow-none">
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-muted-foreground">{locale === "ar" ? "سعر التأجير" : "Rental price"}</p>
+                <p className="mt-1 whitespace-nowrap text-[clamp(1.5rem,5vw,2rem)] font-bold leading-none text-secondary">
+                  {priceParts.map((part, partIndex) => (
+                    <span
+                      key={`${part.type}-${partIndex}`}
+                      className={part.type === "currency" ? "text-sm font-semibold md:text-[clamp(1.5rem,5vw,2rem)] md:font-bold" : undefined}
+                    >
+                      {part.value}
+                    </span>
+                  ))}
+                </p>
+              </div>
+              <span className="shrink-0 text-sm text-muted-foreground">{rentalUnit}</span>
             </div>
-          </div>
-          {c.color && (
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-              <h2 className="font-semibold text-primary mb-2">{locale === "ar" ? "اللون" : "Color"}</h2>
-              <p className="text-sm text-muted-foreground">{c.color}</p>
-            </div>
-          )}
-        </div>
-        <div className="space-y-4">
-          {office && (
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sticky top-20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/20 to-blue-600/20 flex items-center justify-center text-lg font-bold text-secondary shrink-0 overflow-hidden">
-                  {office.image ? (
-                    <img src={office.image} alt={office.office_name || ""} className="w-full h-full object-cover" loading="lazy" />
-                  ) : (
-                    office.office_name?.[0] || "O"
-                  )}
-                </div>
-                <div>
-                  <Link href={`/offices/${office.id}`} className="font-semibold text-primary hover:text-secondary">{office.office_name || (locale === "ar" ? "المكتب" : "Office")}</Link>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="w-3 h-3" />
-                    {office.city || office.country || "-"}
+
+            {office && (
+              <div className="order-last rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:order-none md:rounded-none md:border-0 md:bg-transparent md:p-0 md:pt-4 md:shadow-none">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-gradient-to-br from-secondary/15 to-blue-600/15 text-base font-bold text-secondary shadow-sm">
+                    {office.image && !failedOfficeImage ? (
+                      <Image src={office.image} alt="" fill loading="lazy" sizes="56px" className="object-cover" onError={() => setFailedOfficeImage(true)} />
+                    ) : (
+                      office.office_name?.[0] || "O"
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Link href={`/offices/${office.id}`} className="block truncate font-semibold text-primary transition-colors [@media(hover:hover)]:hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2">
+                      {office.office_name || (locale === "ar" ? "المكتب" : "Office")}
+                    </Link>
+                    <p className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin className="size-3 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{[office.city, office.country].filter(Boolean).join(", ") || "-"}</span>
+                    </p>
                   </div>
                 </div>
-              </div>
-              {office.bio && <p className="text-xs text-muted-foreground leading-relaxed mb-4">{office.bio}</p>}
-              <div className="space-y-2">
-                <a href={`tel:${office.phone_number}`} className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-6 py-3 text-sm font-medium hover:bg-gray-50 transition-all w-full">
-                  <Phone className="w-4 h-4" />{t("car_details.call")}
-                </a>
+
+                {office.bio && <p className="mt-4 text-sm leading-6 text-muted-foreground">{office.bio}</p>}
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <Link href={`/offices/${office.id}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-200 px-3 text-sm font-medium text-primary transition-colors [@media(hover:hover)]:hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2">
+                    {locale === "ar" ? "عرض المكتب" : "View Office"}
+                  </Link>
+                  <a href={`tel:${office.phone_number}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 text-sm font-medium text-primary transition-colors [@media(hover:hover)]:hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2">
+                    <Phone className="size-4" aria-hidden="true" />{t("car_details.call")}
+                  </a>
+                </div>
                 <Button
-                  className="w-full rounded-xl bg-success px-6 py-3 text-sm font-medium text-white hover:bg-success/90 transition-all flex items-center justify-center gap-2"
+                  data-reserve-button
+                  className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-success px-6 py-3 text-sm font-semibold text-white transition-colors [@media(hover:hover)]:hover:bg-success/90 focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2"
                   onClick={() => {
                     const userPhone = profile?.phone_number || ""
-                    openWhatsAppReservation(c, userPhone)
+                    openWhatsAppReservation(currentCar, userPhone)
                   }}
                 >
-                  <MessageCircle className="w-4 h-4" />{locale === "ar" ? "احجز الآن" : "Reserve Now"}
+                  <MessageCircle className="size-4" aria-hidden="true" />{locale === "ar" ? "احجز الآن" : "Reserve Now"}
                 </Button>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </aside>
+
+        <section aria-labelledby="specifications-title" className="min-w-0 rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5 lg:col-start-1">
+          <h2 id="specifications-title" className="mb-4 text-lg font-semibold text-primary">{t("car_details.specs")}</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {specifications.map((specification) => (
+              <div key={specification.label} className="flex min-w-0 items-center gap-3 rounded-lg bg-muted p-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-secondary shadow-sm">
+                  <specification.icon className="size-4.5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-xs text-muted-foreground">{specification.label}</p>
+                  <p className="truncate text-sm font-semibold text-primary">{specification.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
 
       <AnimatePresence>
         {lightboxOpen && (
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={locale === "ar" ? "عارض صور السيارة" : "Car image viewer"}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
             onClick={() => setLightboxOpen(false)}
           >
-            <button onClick={() => setLightboxOpen(false)} className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
-              <X className="w-6 h-6" />
+            <button
+              type="button"
+              aria-label={locale === "ar" ? "إغلاق عارض الصور" : "Close image viewer"}
+              onClick={() => setLightboxOpen(false)}
+              className="absolute end-4 top-4 z-10 inline-flex size-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors [@media(hover:hover)]:hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <X className="size-6" aria-hidden="true" />
             </button>
             {validImages.length > 1 && (
               <>
-                <button onClick={(e) => { e.stopPropagation(); goPrev() }} className="absolute left-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
-                  <ChevronLeft className="w-6 h-6" />
+                <button
+                  type="button"
+                  aria-label={locale === "ar" ? "الصورة السابقة" : "Previous image"}
+                  onClick={(event) => { event.stopPropagation(); goPrev() }}
+                  className="absolute left-4 z-10 inline-flex size-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors [@media(hover:hover)]:hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <ChevronLeft className="size-6" aria-hidden="true" />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); goNext() }} className="absolute right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
-                  <ChevronRight className="w-6 h-6" />
+                <button
+                  type="button"
+                  aria-label={locale === "ar" ? "الصورة التالية" : "Next image"}
+                  onClick={(event) => { event.stopPropagation(); goNext() }}
+                  className="absolute right-4 z-10 inline-flex size-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors [@media(hover:hover)]:hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <ChevronRight className="size-6" aria-hidden="true" />
                 </button>
               </>
             )}
             <motion.div
               key={lightboxIndex}
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              exit={{ opacity: 0, scale: 0.94 }}
               transition={{ duration: 0.2 }}
-              className="max-w-4xl max-h-[85vh] w-full h-full flex items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
+              className="relative flex h-[min(85vh,800px)] w-full max-w-4xl items-center justify-center"
+              onClick={(event) => event.stopPropagation()}
             >
-              {failedImages.has(validImages[lightboxIndex]) ? (
+              {validImages[lightboxIndex] === FALLBACK_IMAGE || failedImages.has(validImages[lightboxIndex]) ? (
                 <div className="flex flex-col items-center gap-2 text-white/60">
-                  <AlertCircle className="w-12 h-12" />
+                  <AlertCircle className="size-12" aria-hidden="true" />
                   <span className="text-sm">{locale === "ar" ? "فشل تحميل الصورة" : "Failed to load image"}</span>
                 </div>
               ) : (
-                <img
+                <Image
                   src={validImages[lightboxIndex]}
-                  alt={c.name}
-                  className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg"
-                  onError={() => setFailedImages((prev) => new Set(prev).add(validImages[lightboxIndex]))}
+                  alt={currentCar.name}
+                  fill
+                  loading="eager"
+                  sizes="90vw"
+                  className="rounded-lg object-contain"
+                  onError={() => setFailedImages((previous) => new Set(previous).add(validImages[lightboxIndex]))}
                 />
               )}
             </motion.div>
             {validImages.length > 1 && (
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/10 text-white text-sm">
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white">
                 {lightboxIndex + 1} / {validImages.length}
               </div>
             )}
