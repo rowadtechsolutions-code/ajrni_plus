@@ -15,7 +15,7 @@ import { useCountries, useCities } from "@/hooks/useLocations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
-import { cn } from "@/lib/utils"
+import { cn, getPhoneConfig } from "@/lib/utils"
 
 export default function RegisterPage() {
   const { locale } = useLocaleStore()
@@ -33,9 +33,20 @@ export default function RegisterPage() {
   const selectedCountry = watch("country")
   const { data: countries = [], isLoading: countriesLoading } = useCountries()
   const { data: cities = [], isLoading: citiesLoading } = useCities(selectedCountry)
+  const phoneConfig = selectedCountry ? getPhoneConfig(selectedCountry) : null
 
   const onSubmit = async (data: RegisterFormData) => {
     setError("")
+    if (selectedCountry && phoneConfig) {
+      const digits = (data.phone || "").replace(/[^\d]/g, "")
+      if (digits.length !== phoneConfig.maxLength) {
+        setError(locale === "ar"
+          ? `رقم الهاتف يجب أن يتكون من ${phoneConfig.maxLength} أرقام`
+          : `Phone number must be ${phoneConfig.maxLength} digits`)
+        return
+      }
+      data.phone = `${phoneConfig.dialCode}${digits}`
+    }
     try {
       await signUp({ ...data, role })
       router.push("/auth/login")
@@ -97,7 +108,27 @@ export default function RegisterPage() {
               />
             )}
             <Input id="email" label={t("auth.email")} type="email" placeholder="email@example.com" error={errors.email?.message} {...register("email")} />
-            <Input id="phone" label={t("auth.phone")} type="tel" placeholder="+966 5X XXX XXXX" error={errors.phone?.message} {...register("phone")} />
+            <div className="space-y-1.5">
+              <label htmlFor="phone" className="block text-sm font-medium text-primary">
+                {t("auth.phone")}
+              </label>
+              <div className="flex rounded-xl border border-gray-200 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all overflow-hidden">
+                {phoneConfig && (
+                  <span className="flex items-center px-3 text-sm text-muted-foreground bg-muted/50 border-l border-gray-200 shrink-0">
+                    {phoneConfig.dialCode}
+                  </span>
+                )}
+                <input
+                  id="phone"
+                  type="tel"
+                  placeholder={phoneConfig ? phoneConfig.placeholder : (locale === "ar" ? "رقم الهاتف" : "Phone number")}
+                  maxLength={phoneConfig ? phoneConfig.maxLength : 15}
+                  className="flex-1 px-4 py-3 text-sm outline-none border-0 bg-transparent min-w-0"
+                  {...register("phone")}
+                />
+              </div>
+              {errors.phone?.message && <p className="text-xs text-error mt-1">{errors.phone.message}</p>}
+            </div>
             <Input id="password" label={t("auth.password")} type="password" placeholder="••••••••" error={errors.password?.message} {...register("password")} />
             <Input id="confirmPassword" label={locale === "ar" ? "تأكيد كلمة المرور" : "Confirm password"} type="password" placeholder="••••••••" error={errors.confirmPassword?.message} {...register("confirmPassword")} />
             <Button type="submit" className="w-full" loading={isSubmitting}>{t("auth.register_btn")}</Button>

@@ -12,7 +12,7 @@ import { useCountries, useCities } from "@/hooks/useLocations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
-import { cn } from "@/lib/utils"
+import { cn, getPhoneConfig, stripPhoneDialCode, reconstructFullPhone } from "@/lib/utils"
 import { motion } from "framer-motion"
 
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -70,19 +70,25 @@ export default function ProfileEditPage() {
 
   useEffect(() => {
     if (userData) {
+      const rawPhone = userData.phone_number || ""
+      const country = userData.country || ""
+      const config = country ? getPhoneConfig(country) : null
       setForm({
         full_name: userData.full_name || "",
         email: userData.email || "",
-        phone_number: userData.phone_number || "",
-        country: userData.country || "",
+        phone_number: config ? stripPhoneDialCode(rawPhone, config.dialCode) : rawPhone,
+        country: country,
         city: userData.city || "",
       })
     } else if (profile) {
+      const rawPhone = profile.phone_number || ""
+      const country = profile.country || ""
+      const config = country ? getPhoneConfig(country) : null
       setForm({
         full_name: profile.full_name || profile.name || "",
         email: profile.email || user?.email || "",
-        phone_number: profile.phone_number || "",
-        country: profile.country || "",
+        phone_number: config ? stripPhoneDialCode(rawPhone, config.dialCode) : rawPhone,
+        country: country,
         city: profile.city || "",
       })
     }
@@ -90,8 +96,18 @@ export default function ProfileEditPage() {
 
   const { data: countries = [], isLoading: countriesLoading } = useCountries()
   const { data: cities = [], isLoading: citiesLoading } = useCities(form.country)
+  const phoneConfig = form.country ? getPhoneConfig(form.country) : null
 
   const handleChange = (field: string, value: string) => {
+    if (field === "phone_number" && phoneConfig) {
+      const digits = value.replace(/[^\d]/g, "")
+      const dialDigits = phoneConfig.dialCode.replace(/[^\d]/g, "")
+      let local = digits
+      if (local.startsWith("00" + dialDigits)) local = local.slice(2 + dialDigits.length)
+      else if (local.startsWith(dialDigits)) local = local.slice(dialDigits.length)
+      local = local.slice(0, phoneConfig.maxLength)
+      value = local
+    }
     setForm((prev) => ({ ...prev, [field]: value }))
     setErrors((prev) => ({ ...prev, [field]: "" }))
     if (field === "country") setForm((prev) => ({ ...prev, city: "" }))
@@ -102,7 +118,14 @@ export default function ProfileEditPage() {
     if (!form.full_name.trim())
       errs.full_name = locale === "ar" ? "الاسم مطلوب" : "Full name is required"
     if (!form.phone_number.trim())
-      errs.phone_number = locale === "ar" ? "رقم الهاتف مطلوب" : "Phone number is required"
+      errs.phone_number = t("auth.phone_required")
+    else if (phoneConfig) {
+      const digits = form.phone_number.replace(/[^\d]/g, "")
+      if (digits.length !== phoneConfig.maxLength)
+        errs.phone_number = locale === "ar"
+          ? `رقم الهاتف يجب أن يتكون من ${phoneConfig.maxLength} أرقام`
+          : `Phone number must be ${phoneConfig.maxLength} digits`
+    }
     if (!form.country)
       errs.country = locale === "ar" ? "الدولة مطلوبة" : "Country is required"
     setErrors(errs)
@@ -112,9 +135,12 @@ export default function ProfileEditPage() {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error("Not authenticated")
+      const phone = phoneConfig
+        ? reconstructFullPhone(form.phone_number, phoneConfig.dialCode)
+        : form.phone_number.trim()
       return userService.updateProfile(user.id, {
         full_name: form.full_name.trim(),
-        phone_number: form.phone_number.trim(),
+        phone_number: phone,
         country: form.country,
         city: form.city,
       })
@@ -236,14 +262,29 @@ export default function ProfileEditPage() {
                   disabled
                   className="bg-gray-50 text-muted-foreground cursor-not-allowed"
                 />
-                <Input
-                  id="phone_number"
-                  label={locale === "ar" ? "رقم الهاتف" : "Phone number"}
-                  type="tel"
-                  value={form.phone_number}
-                  onChange={(e) => handleChange("phone_number", e.target.value)}
-                  error={errors.phone_number}
-                />
+                <div className="space-y-1.5">
+                  <label htmlFor="phone_number" className="block text-sm font-medium text-primary">
+                    {t("auth.phone")}
+                  </label>
+                  <div className="flex rounded-xl border border-gray-200 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all overflow-hidden">
+                    {phoneConfig && (
+                      <span dir="ltr" className="flex items-center px-3 text-sm text-muted-foreground bg-muted/50 border-l border-gray-200 shrink-0">
+                        {phoneConfig.dialCode}
+                      </span>
+                    )}
+                    <input
+                      id="phone_number"
+                      type="tel"
+                      dir="ltr"
+                      placeholder={phoneConfig ? phoneConfig.placeholder : (locale === "ar" ? "رقم الهاتف" : "Phone number")}
+                      maxLength={20}
+                      className="flex-1 px-4 py-3 text-sm outline-none border-0 bg-transparent min-w-0"
+                      value={form.phone_number}
+                      onChange={(e) => handleChange("phone_number", e.target.value)}
+                    />
+                  </div>
+                  {errors.phone_number && <p className="text-xs text-error mt-1">{errors.phone_number}</p>}
+                </div>
                 <Select
                   id="country"
                   label={locale === "ar" ? "الدولة" : "Country"}

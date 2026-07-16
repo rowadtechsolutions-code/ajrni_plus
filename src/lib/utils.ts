@@ -23,6 +23,21 @@ const countryDialCode: Record<string, string> = {
   OM: "968",
 }
 
+const phoneConfigs: Record<string, { dialCode: string; maxLength: number; placeholder: string }> = {
+  OM: { dialCode: "+968", maxLength: 8, placeholder: "XXXXXXXX" },
+  SA: { dialCode: "+966", maxLength: 9, placeholder: "5XX XXXXXX" },
+  AE: { dialCode: "+971", maxLength: 9, placeholder: "5XX XXXXXX" },
+  QA: { dialCode: "+974", maxLength: 8, placeholder: "XXXXXXXX" },
+  KW: { dialCode: "+965", maxLength: 8, placeholder: "XXXXXXXX" },
+  BH: { dialCode: "+973", maxLength: 8, placeholder: "XXXXXXXX" },
+}
+
+export function getPhoneConfig(countryCode: string) {
+  const config = phoneConfigs[countryCode]
+  if (config) return config
+  return null
+}
+
 export function getCurrencyByCountry(country: string | null | undefined) {
   if (country && countryCurrency[country]) return countryCurrency[country]
   return { code: "SAR", symbol: "ر.س.", nameAr: "ريال سعودي" }
@@ -162,4 +177,22 @@ export function openWhatsAppReservation(car: {
   const targetPhone = formatPhoneNumber(car?.office?.phone_number, car?.office?.country)
   const url = `https://wa.me/${targetPhone}?text=${message}`
   window.open(url, "_blank")
+}
+
+export function stripPhoneDialCode(phone: string, dialCode: string): string {
+  if (!phone || !dialCode) return phone || ""
+  const digits = dialCode.replace(/[^\d]/g, "")
+  if (phone.startsWith(dialCode)) return phone.slice(dialCode.length)
+  if (phone.startsWith("00" + digits)) return phone.slice(2 + digits.length)
+  const justDigits = phone.replace(/[^\d]/g, "")
+  if (justDigits.startsWith(digits) && justDigits.length > digits.length) return justDigits.slice(digits.length)
+  return phone
+}
+
+export function reconstructFullPhone(localInput: string, dialCode: string): string {
+  const digits = dialCode.replace(/[^\d]/g, "")
+  let cleaned = localInput.replace(/[^\d]/g, "")
+  if (cleaned.startsWith("00" + digits)) cleaned = cleaned.slice(2 + digits.length)
+  if (cleaned.startsWith(digits)) cleaned = cleaned.slice(digits.length)
+  return `+${digits}${cleaned}`
 }
