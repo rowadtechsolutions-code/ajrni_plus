@@ -44,6 +44,7 @@ function getImageUrl(value: unknown): string | null {
 
 export const CarCard = memo(function CarCard({ car, index = 0, eagerImage }: CarCardProps) {
   const { locale } = useLocaleStore()
+  const isRTL = locale === "ar"
   const { t } = useTranslation(locale)
   const router = useRouter()
   const wishlisted = useFavoriteStore((state) => state.ids.includes(car.id))
@@ -78,6 +79,11 @@ export const CarCard = memo(function CarCard({ car, index = 0, eagerImage }: Car
 
     return uniqueImages.size > 0 ? Array.from(uniqueImages) : [FALLBACK_IMAGE]
   }, [car.image, car.images])
+
+  const dotImageIndexes = useMemo(() => {
+    const imageIndexes = galleryImages.map((_, imageIndex) => imageIndex)
+    return isRTL ? imageIndexes.reverse() : imageIndexes
+  }, [galleryImages, isRTL])
 
   const safeImageIndex = Math.min(activeImageIndex, galleryImages.length - 1)
   const activeImage = galleryImages[safeImageIndex]
@@ -167,7 +173,7 @@ export const CarCard = memo(function CarCard({ car, index = 0, eagerImage }: Car
     const swipeThreshold = Math.min(64, event.currentTarget.clientWidth * 0.16)
 
     if (!cancelled && wasDrag && Math.abs(deltaX) >= swipeThreshold) {
-      const moveToNext = locale === "ar" ? deltaX > 0 : deltaX < 0
+      const moveToNext = isRTL ? deltaX > 0 : deltaX < 0
       setActiveImageIndex((current) => {
         if (moveToNext) return Math.min(current + 1, galleryImages.length - 1)
         return Math.max(current - 1, 0)
@@ -299,9 +305,9 @@ export const CarCard = memo(function CarCard({ car, index = 0, eagerImage }: Car
             <div className="pointer-events-none absolute inset-x-0 bottom-2.5 z-10 flex justify-center" dir="ltr" aria-hidden="true">
               {galleryImages.length <= 5 ? (
                 <div className="flex items-center gap-1 rounded-full bg-black/20 px-1.5 py-1 backdrop-blur-sm">
-                  {galleryImages.map((image, imageIndex) => (
+                  {dotImageIndexes.map((imageIndex) => (
                     <span
-                      key={image}
+                      key={galleryImages[imageIndex]}
                       className={cn(
                         "block size-1 rounded-full bg-white/45 transition-[width,opacity] duration-200",
                         imageIndex === safeImageIndex && "w-2 bg-white/95"
