@@ -289,7 +289,7 @@ export default function CarDetailsPage() {
             </div>
 
             {office && (
-              <div className="order-last rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:order-none md:rounded-none md:border-0 md:bg-transparent md:p-0 md:pt-4 md:shadow-none">
+              <div className="order-last min-w-0 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:order-none md:rounded-none md:border-0 md:bg-transparent md:p-0 md:pt-4 md:shadow-none">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-gradient-to-br from-secondary/15 to-blue-600/15 text-base font-bold text-secondary shadow-sm">
                     {office.image && !failedOfficeImage ? (
