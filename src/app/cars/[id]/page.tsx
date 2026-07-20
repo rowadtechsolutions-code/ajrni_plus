@@ -309,7 +309,7 @@ export default function CarDetailsPage() {
                   </div>
                 </div>
 
-                {office.bio && <p className="mt-4 text-sm leading-6 text-muted-foreground">{office.bio}</p>}
+                {office.bio && <p dir="auto" className="mt-4 text-sm leading-6 text-muted-foreground line-clamp-2 overflow-hidden text-start">{office.bio}</p>}
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <Link href={`/offices/${office.id}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-200 px-3 text-sm font-medium text-primary transition-colors [@media(hover:hover)]:hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2">
