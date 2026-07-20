@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { Search, Building2, X, SlidersHorizontal } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { Search, Building2, SlidersHorizontal, Sparkles } from "lucide-react"
+import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { useLocaleStore } from "@/store/useLocaleStore"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -10,6 +10,7 @@ import { useTranslation } from "@/lib/i18n"
 import { officeService } from "@/lib/supabase/services"
 import { useCountries, useCities } from "@/hooks/useLocations"
 import { formatPhoneNumber, cn } from "@/lib/utils"
+import { FilterSidebar } from "@/components/shared/filter-sidebar"
 import { Button } from "@/components/ui/button"
 import { OfficeCard } from "@/components/shared/office-card"
 import type { OfficeType } from "@/types"
@@ -107,48 +108,42 @@ export default function OfficesPage() {
   )
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-2xl mx-auto mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-medium mb-4">
-          <Building2 className="w-3 h-3" />
-          {locale === "ar" ? "مكاتب موثقة" : "Verified Offices"}
-        </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-primary mb-3">{t("offices_page.title")}</h1>
-        <p className="text-muted-foreground">{t("offices_page.subtitle")}</p>
-      </motion.div>
-
-      <div className="flex flex-col md:flex-row gap-8">
-        <aside className="hidden md:block w-64 shrink-0">
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sticky top-24">
-            <h3 className="font-semibold text-primary mb-5 flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-secondary" />
-              {locale === "ar" ? "تصفية" : "Filters"}
-            </h3>
-            <FilterContent />
-          </div>
-        </aside>
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row gap-8">
+        <FilterSidebar open={showFilters} onClose={() => setShowFilters(false)} title={locale === "ar" ? "تصفية" : "Filters"}>
+          <FilterContent />
+        </FilterSidebar>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="relative flex-1">
-              <Search className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none", locale === "ar" ? "right-3" : "left-3")} />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("offices_page.search_placeholder")}
-                className={cn(
-                  "w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition-all duration-200 focus:border-secondary focus:ring-2 focus:ring-secondary/20",
-                  locale === "ar" ? "pr-10" : "pl-10"
-                )}
-              />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-primary">{t("offices_page.title")}</h1>
+              <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-secondary" />
+                {isLoading ? "..." : `${filtered.length} ${locale === "ar" ? "مكتب متاح" : "offices available"}`}
+              </p>
             </div>
-            <button
-              onClick={() => setShowFilters(true)}
-              className="md:hidden inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium transition-all hover:bg-gray-50 active:scale-[0.98] shrink-0"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1">
+                <Search className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground", locale === "ar" ? "right-3" : "left-3")} />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("offices_page.search_placeholder")}
+                  className={cn(
+                    "w-full sm:w-80 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-secondary focus:ring-2 focus:ring-secondary/20",
+                    locale === "ar" ? "pr-10" : "pl-10"
+                  )}
+                />
+              </div>
+              <button
+                onClick={() => setShowFilters(true)}
+                className="md:hidden inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-900 transition-all hover:bg-gray-50 active:scale-[0.98] shrink-0"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {isLoading ? (
@@ -193,33 +188,7 @@ export default function OfficesPage() {
             </div>
           )}
         </div>
-      </div>
-
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 md:hidden">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowFilters(false)} />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white p-6 pb-16 overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="font-semibold text-primary flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-secondary" />
-                  {locale === "ar" ? "تصفية" : "Filters"}
-                </h3>
-                <button onClick={() => setShowFilters(false)} className="p-2 rounded-2xl hover:bg-muted transition-all">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <FilterContent />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </motion.div>
     </div>
   )
 }

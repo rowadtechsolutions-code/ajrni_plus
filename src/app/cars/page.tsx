@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { SlidersHorizontal, X, Search, Sparkles } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { Search, Sparkles, SlidersHorizontal } from "lucide-react"
+import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -15,6 +15,7 @@ import { CarCard } from "@/components/shared/car-card"
 import { brands } from "@/lib/brands"
 import { useCountries, useCities } from "@/hooks/useLocations"
 import { getCurrencyByCountry } from "@/lib/utils"
+import { FilterSidebar } from "@/components/shared/filter-sidebar"
 import type { CarType } from "@/types"
 
 const fuelTypes = ["GASOLINE", "DIESEL", "ELECTRIC", "HYBRID"]
@@ -188,15 +189,9 @@ function CarsPageContent() {
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row gap-8">
-        <aside className="hidden md:block w-64 shrink-0">
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sticky top-24">
-            <h3 className="font-semibold text-primary mb-5 flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-secondary" />
-              {t("cars.filters")}
-            </h3>
-            <FilterContent />
-          </div>
-        </aside>
+        <FilterSidebar open={showFilters} onClose={() => setShowFilters(false)} title={t("cars.filters")}>
+          <FilterContent />
+        </FilterSidebar>
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
@@ -264,31 +259,6 @@ function CarsPageContent() {
           )}
         </div>
       </motion.div>
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 md:hidden">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowFilters(false)} />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white p-6 pb-16 overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="font-semibold text-primary flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-secondary" />
-                  {t("cars.filters")}
-                </h3>
-                <button onClick={() => setShowFilters(false)} className="p-2 rounded-2xl hover:bg-muted transition-all">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <FilterContent />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }
